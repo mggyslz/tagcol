@@ -356,6 +356,160 @@ textarea::placeholder{color:var(--dim)}
 .entry:hover .del-btn,
 .review-entry:hover .del-btn{ opacity:.55; }
 
+/* ── READER PANEL ── */
+.reader-panel{
+  flex:1;
+  display:flex;
+  flex-direction:row;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.reader-panel.hidden{display:none!important}
+
+/* Reader drop zone */
+.rdr-drop-zone{
+  width:100%;background:var(--sur2);
+  border:1px dashed var(--bdr2);border-radius:var(--r);
+  padding:22px 16px;text-align:center;cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+.rdr-drop-zone:hover,.rdr-drop-zone.drag-over{
+  border-color:var(--warn);background:var(--warn-bg);
+}
+.rdr-drop-zone-icon{font-size:20px;opacity:.45;margin-bottom:6px}
+.rdr-drop-zone-text{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;line-height:1.7}
+.rdr-drop-zone-text strong{color:var(--warn)}
+
+/* Reader file loaded chip */
+.rdr-file-loaded{
+  background:var(--sur2);border:1px solid var(--bdr2);border-radius:var(--r);
+  padding:9px 12px;font-family:var(--mono);font-size:10px;color:var(--muted);
+  letter-spacing:.04em;display:none;align-items:center;justify-content:space-between;gap:8px;
+}
+.rdr-file-loaded.visible{display:flex}
+.rdr-file-name{color:var(--warn);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+
+/* Reader lang bars */
+.rdr-lang-bars{display:flex;flex-direction:column;gap:9px}
+.rdr-bar-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.04em;margin-bottom:3px;text-transform:uppercase}
+.rdr-bar-meta .rdr-bar-val{color:var(--muted)}
+.rdr-bar-track{height:3px;background:var(--bdr2);border-radius:2px;overflow:hidden}
+.rdr-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.rdr-bar-fill.taglish{background:#f59e0b}
+.rdr-bar-fill.tagalog{background:#60a5fa}
+.rdr-bar-fill.english{background:#a78bfa}
+
+/* Reader filter chips */
+.rdr-lang-filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.rdr-fchip{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;
+  padding:4px 10px;border-radius:2px;border:1px solid var(--bdr2);
+  background:var(--sur2);color:var(--dim);cursor:pointer;
+  transition:all .13s;text-transform:uppercase;user-select:none;
+}
+.rdr-fchip:hover{color:var(--text);border-color:var(--bdr3)}
+.rdr-fchip.active-taglish{color:#f59e0b;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.07)}
+.rdr-fchip.active-tagalog{color:#60a5fa;border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.07)}
+.rdr-fchip.active-english{color:#a78bfa;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.07)}
+.rdr-fchip.active-all    {color:var(--text);border-color:var(--bdr3);background:var(--sur3)}
+.rdr-fchip-count{font-size:9px;opacity:.7;margin-left:3px}
+
+/* Reader entries */
+.rdr-entry{
+  border-bottom:1px solid var(--bdr);border-left:2px solid transparent;
+  padding:11px 16px 11px 20px;
+  display:grid;grid-template-columns:1fr auto;
+  gap:10px;align-items:start;transition:background .1s;position:relative;
+}
+.rdr-entry:hover{background:var(--surface)}
+.rdr-entry:hover .rdr-del-btn{opacity:1}
+.rdr-entry.lang-taglish{border-left-color:#f59e0b}
+.rdr-entry.lang-tagalog{border-left-color:#60a5fa}
+.rdr-entry.lang-english{border-left-color:#a78bfa}
+.rdr-entry.deleting{animation:rdrFadeSlide .22s ease forwards}
+@keyframes rdrFadeSlide{
+  to{opacity:0;transform:translateX(-8px);max-height:0;padding:0;overflow:hidden}
+}
+.rdr-entry-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.rdr-entry-num{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.03em}
+
+/* Reader del btn */
+.rdr-del-btn{
+  font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;
+  padding:2px 8px;border:1px solid rgba(248,113,113,.2);
+  background:transparent;color:var(--neg);cursor:pointer;
+  border-radius:2px;text-transform:uppercase;
+  opacity:0;transition:opacity .15s,background .13s,border-color .13s;
+  white-space:nowrap;
+}
+.rdr-del-btn:hover{background:var(--neg-bg);border-color:rgba(248,113,113,.45);opacity:1!important}
+
+/* Reader del-visible btn */
+.rdr-btn-del-filtered{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;
+  padding:5px 11px;border:1px solid rgba(248,113,113,.25);
+  background:var(--neg-bg);color:var(--neg);cursor:pointer;
+  border-radius:var(--r);transition:all .13s;text-transform:uppercase;white-space:nowrap;
+}
+.rdr-btn-del-filtered:hover{background:rgba(248,113,113,.13);border-color:var(--neg)}
+
+/* Reader search */
+.rdr-search-wrap{position:relative}
+.rdr-search-input{
+  background:var(--sur2);border:1px solid var(--bdr2);color:var(--text);
+  font-family:var(--sans);font-size:12px;padding:5px 10px 5px 28px;
+  border-radius:var(--r);outline:none;width:180px;transition:border-color .15s,width .2s;
+}
+.rdr-search-input:focus{border-color:var(--bdr3);width:220px}
+.rdr-search-input::placeholder{color:var(--dim)}
+.rdr-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);pointer-events:none;font-size:11px}
+
+/* Reader empty */
+.rdr-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;color:var(--dim);
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;padding:40px;text-align:center;
+}
+.rdr-empty .icon{font-size:28px;opacity:.3}
+.rdr-empty p{line-height:1.8;max-width:300px}
+
+/* Reader undo toast */
+.rdr-undo-toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--sur3);border:1px solid var(--bdr3);border-radius:var(--r);
+  font-family:var(--mono);font-size:11px;color:var(--text);
+  padding:10px 18px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);transition:transform .22s ease;z-index:999;
+  white-space:nowrap;
+}
+.rdr-undo-toast.visible{transform:translateX(-50%) translateY(0)}
+.rdr-undo-btn{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;
+  padding:3px 11px;border:1px solid var(--warn);background:var(--warn-bg);
+  color:var(--warn);cursor:pointer;border-radius:2px;text-transform:uppercase;
+  transition:background .13s;
+}
+.rdr-undo-btn:hover{background:rgba(251,191,36,.14)}
+
+/* Reader btn-dl variants */
+.btn-rdr-dl{background:var(--pos-bg);border-color:rgba(74,222,128,.25);color:var(--pos);width:100%;margin-top:8px}
+.btn-rdr-dl:hover{background:rgba(74,222,128,.13);border-color:var(--pos)}
+.btn-rdr-dl:disabled{opacity:.25}
+.btn-rdr-dl2{background:var(--warn-bg);border-color:rgba(251,191,36,.25);color:var(--warn);width:100%;margin-top:6px}
+.btn-rdr-dl2:hover{background:rgba(251,191,36,.13);border-color:var(--warn)}
+.btn-rdr-dl2:disabled{opacity:.25}
+
+/* Reader about-pane */
+.rdr-about-pane{padding:14px 20px}
+.rdr-about-row{
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:10px;color:var(--dim);
+  letter-spacing:.04em;padding:3px 0;
+}
+.rdr-about-row span{color:var(--muted)}
+
 /* Deletion animation */
 @keyframes entryFadeOut{
   from{opacity:1;max-height:200px;transform:scaleY(1)}
@@ -379,6 +533,7 @@ textarea::placeholder{color:var(--dim)}
     <div class="vdiv"></div>
     <button class="mode-tab active" id="modeCollect" onclick="setMode('collect')">COLLECT</button>
     <button class="mode-tab" id="modeReview" onclick="setMode('review')">REVIEW <span class="rev-badge" id="revBadge"></span></button>
+    <button class="mode-tab" id="modeReader" onclick="setMode('reader')">READER</button>
   </div>
   <div class="stats-bar">
     <div class="stat"><span class="stat-lbl">total</span><span class="stat-val" id="statTotal">0</span></div>
@@ -588,6 +743,83 @@ textarea::placeholder{color:var(--dim)}
 
   </div><!-- /review-panel -->
 
+  <!-- ══ READER PANEL ══ -->
+  <div class="reader-panel hidden" id="readerPanel">
+
+    <!-- Reader Sidebar -->
+    <div class="sidebar" style="width:300px">
+      <div class="pane">
+        <div class="pane-lbl">Load .txt Dataset</div>
+        <div class="rdr-drop-zone" id="rdrDropZone">
+          <div class="rdr-drop-zone-icon">📂</div>
+          <div class="rdr-drop-zone-text">Drop <strong>.txt</strong> here<br>or <strong>click to browse</strong></div>
+        </div>
+        <input type="file" id="rdrFileInput" accept=".txt" style="display:none">
+        <div class="rdr-file-loaded" id="rdrFileLoaded">
+          <span class="rdr-file-name" id="rdrFileName">—</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap" id="rdrFileLines">0 lines</span>
+        </div>
+        <div style="margin-top:8px;display:none" id="rdrReloadWrap">
+          <button class="btn btn-sm btn-full" onclick="document.getElementById('rdrFileInput').click()">↺ LOAD DIFFERENT FILE</button>
+        </div>
+      </div>
+      <div class="pane" id="rdrStatsPane" style="display:none">
+        <div class="pane-lbl">Corpus Stats</div>
+        <div class="rdr-lang-bars" id="rdrLangBars"></div>
+      </div>
+      <div class="pane" id="rdrFilterPane" style="display:none">
+        <div class="pane-lbl">Filter Language</div>
+        <div class="rdr-lang-filters">
+          <div class="rdr-fchip active-all" data-lang="all" onclick="rdrSetFilter('all')">ALL <span class="rdr-fchip-count" id="rdrCAll">0</span></div>
+          <div class="rdr-fchip" data-lang="taglish" onclick="rdrSetFilter('taglish')">TAGLISH <span class="rdr-fchip-count" id="rdrCTaglish">0</span></div>
+          <div class="rdr-fchip" data-lang="tagalog" onclick="rdrSetFilter('tagalog')">TAGALOG <span class="rdr-fchip-count" id="rdrCTagalog">0</span></div>
+          <div class="rdr-fchip" data-lang="english" onclick="rdrSetFilter('english')">ENGLISH <span class="rdr-fchip-count" id="rdrCEnglish">0</span></div>
+        </div>
+      </div>
+      <div class="pane" id="rdrExportPane" style="display:none">
+        <div class="pane-lbl">Export</div>
+        <button class="btn btn-sm btn-rdr-dl btn-full" onclick="rdrDownloadAll()">↓ Download All Remaining</button>
+        <button class="btn btn-sm btn-rdr-dl2 btn-full" style="margin-top:6px" onclick="rdrDownloadFiltered()">↓ Download Visible Only</button>
+        <button class="btn btn-sm btn-danger btn-full" style="margin-top:6px" onclick="rdrClearAll()">✕ Clear Session</button>
+      </div>
+      <div class="rdr-about-pane">
+        <div class="rdr-about-row">Input<span>.txt (one line per entry)</span></div>
+        <div class="rdr-about-row">Lang detect<span>particle heuristics</span></div>
+        <div class="rdr-about-row">Delete<span>permanent (session)</span></div>
+        <div class="rdr-about-row">Undo<span>5 s window</span></div>
+        <div class="rdr-about-row">Output<span>clean .txt</span></div>
+      </div>
+    </div>
+
+    <!-- Reader Main -->
+    <div class="main-area" id="readerMain">
+      <div class="toolbar" id="rdrToolbar" style="display:none">
+        <div class="toolbar-left">
+          <span class="entry-count"><span style="color:var(--text);font-weight:700" id="rdrShowingCount">0</span> entries</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="rdr-btn-del-filtered" onclick="rdrDeleteFiltered()">✕ Delete Visible</button>
+          <div class="rdr-search-wrap">
+            <span class="rdr-search-icon">⌕</span>
+            <input type="text" class="rdr-search-input" id="rdrSearchInput" placeholder="Search…" oninput="rdrOnSearch()">
+          </div>
+        </div>
+      </div>
+      <div class="entries" id="rdrEntriesList"></div>
+      <div class="rdr-empty" id="rdrEmptyState">
+        <div class="icon">◈</div>
+        <p>Drop a .txt file into the sidebar<br>to begin reading.</p>
+      </div>
+      <div class="pagination" id="rdrPaginationBar" style="display:none">
+        <button class="page-btn" id="rdrPrevBtn" onclick="rdrChangePage(-1)">← PREV</button>
+        <div id="rdrPageNumbers" style="display:flex;gap:4px"></div>
+        <button class="page-btn" id="rdrNextBtn" onclick="rdrChangePage(1)">NEXT →</button>
+        <span style="margin-left:auto;color:var(--dim);font-family:var(--mono);font-size:10px" id="rdrPageInfo"></span>
+      </div>
+    </div>
+
+  </div><!-- /reader-panel -->
+
 </div><!-- /app -->
 
 <!-- Preview Modal (JSON viewer) -->
@@ -635,6 +867,11 @@ textarea::placeholder{color:var(--dim)}
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 22px;border-top:1px solid var(--bdr);background:var(--surface);" id="previewPagination"></div>
   </div>
+</div>
+
+<div class="rdr-undo-toast" id="rdrUndoToast">
+  <span id="rdrUndoMsg">1 entry deleted</span>
+  <button class="rdr-undo-btn" onclick="rdrUndoDelete()">↩ Undo</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1450,8 +1687,10 @@ function goToPreviewPage(p) {
 function setMode(mode) {
   document.getElementById('modeCollect').classList.toggle('active', mode === 'collect');
   document.getElementById('modeReview').classList.toggle('active', mode === 'review');
+  document.getElementById('modeReader').classList.toggle('active', mode === 'reader');
   document.getElementById('collectPanel').classList.toggle('hidden', mode !== 'collect');
   document.getElementById('reviewPanel').classList.toggle('hidden', mode !== 'review');
+  document.getElementById('readerPanel').classList.toggle('hidden', mode !== 'reader');
 }
 
 // ── REVIEW STATE ──────────────────────────────────
@@ -1985,6 +2224,279 @@ renderReview = function(...args) {
     highlightKbEntry('review');
   }
 };
+
+// ── READER MODULE ────────────────────────────────────────────────────────────
+const RDR_PAGE_SIZE = 100;
+let rdrAllEntries    = [];
+let rdrFiltered      = [];
+let rdrCurrentFilter = 'all';
+let rdrSearchQuery   = '';
+let rdrCurrentPage   = 1;
+let rdrUndoStack     = null;
+let rdrUndoTimer     = null;
+let rdrEntrySeq      = 0;
+let rdrOriginalTotal = 0;
+
+// Tagalog particle set (same heuristic as reader)
+const RDR_TGL = new Set([
+  'ang','ng','sa','ay','mga','ko','mo','siya','kami','kayo','sila',
+  'namin','natin','nila','niya','niyo','ako','ikaw','ito','iyon',
+  'kaya','pero','para','kung','dahil','kapag','nang','naman','muna',
+  'ulit','pala','eh','kasi','daw','kahit','nga','po','opo','ho',
+  'hindi','wala','meron','ano','sino','saan','paano','bakit','tapos',
+  'yun','yung','nung','pang','diba','di','wag','huwag','sige','lang',
+  'din','rin','noh','raw','ba','grabe','sobra','talaga','siguro',
+  'syempre','siyempre','tol','beh','bes','kuya','ate','lodi','char',
+  'charot','gets','nako','naku','sus','uy','hoy','hay','baka','lagi',
+  'ngayon','kahapon','bukas','mamaya','kanina','dati','lahat','puro',
+  'sarili','parang','gusto','ayaw','kailangan','dapat','pwede','puwede',
+  'salamat','pasensya','ingat','nalang','medyo','konti','marami','super',
+  'ewan','hala','talaga','dito','doon','diyan','tayo','atin',
+  'ganon','ganito','ganyan','sana','luh','leh','weh','natin',
+  'pilipinas','pilipino','filipino','filipina','pinoy','pinay',
+]);
+
+function rdrDetectLang(text) {
+  const tokens = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
+  if (tokens.length < 2) return 'english';
+  const tgl = tokens.filter(t => RDR_TGL.has(t)).length;
+  const eng = tokens.filter(t => !RDR_TGL.has(t) && t.length > 2).length;
+  if (tgl === 0) return 'english';
+  if (tgl > 0 && eng > 0) return 'taglish';
+  return 'tagalog';
+}
+
+// File loading
+(function() {
+  const dz = document.getElementById('rdrDropZone');
+  const fi = document.getElementById('rdrFileInput');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) rdrProcessFile(e.dataTransfer.files[0]);
+  });
+  fi.addEventListener('change', e => {
+    if (e.target.files[0]) rdrProcessFile(e.target.files[0]);
+    e.target.value = '';
+  });
+})();
+
+function rdrProcessFile(file) {
+  if (!file.name.toLowerCase().endsWith('.txt')) { toast('Please load a .txt file', 'warn'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+    rdrAllEntries = lines.map(text => ({ id: rdrEntrySeq++, text, lang: rdrDetectLang(text) }));
+    rdrOriginalTotal = rdrAllEntries.length;
+
+    document.getElementById('rdrDropZone').style.display = 'none';
+    const fl = document.getElementById('rdrFileLoaded');
+    fl.classList.add('visible');
+    document.getElementById('rdrFileName').textContent  = file.name;
+    document.getElementById('rdrFileLines').textContent = rdrAllEntries.length + ' lines';
+    document.getElementById('rdrReloadWrap').style.display = '';
+
+    rdrCurrentFilter = 'all'; rdrSearchQuery = ''; rdrCurrentPage = 1;
+    document.getElementById('rdrSearchInput').value = '';
+    rdrResetChips();
+    rdrApplyFilters();
+    rdrShowUI();
+    toast('Loaded ' + rdrAllEntries.length + ' entries', 'ok');
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function rdrShowUI() {
+  ['rdrStatsPane','rdrFilterPane','rdrExportPane','rdrToolbar'].forEach(id => {
+    document.getElementById(id).style.display = '';
+  });
+  document.getElementById('rdrEmptyState').style.display = 'none';
+  rdrUpdateCounts();
+}
+
+function rdrClearAll() {
+  rdrAllEntries = []; rdrFiltered = []; rdrCurrentFilter = 'all';
+  rdrSearchQuery = ''; rdrCurrentPage = 1; rdrOriginalTotal = 0;
+  rdrUndoStack = null; rdrHideUndo();
+  document.getElementById('rdrDropZone').style.display = '';
+  document.getElementById('rdrFileLoaded').classList.remove('visible');
+  document.getElementById('rdrReloadWrap').style.display = 'none';
+  document.getElementById('rdrSearchInput').value = '';
+  rdrResetChips();
+  ['rdrStatsPane','rdrFilterPane','rdrExportPane','rdrToolbar','rdrPaginationBar'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('rdrEntriesList').innerHTML = '';
+  document.getElementById('rdrEmptyState').style.display = 'flex';
+  document.getElementById('rdrEmptyState').querySelector('p').textContent =
+    'Drop a .txt file into the sidebar\nto begin reading.';
+  rdrUpdateCounts();
+}
+
+// Filter
+function rdrSetFilter(lang) {
+  rdrCurrentFilter = lang; rdrCurrentPage = 1;
+  rdrResetChips();
+  document.querySelectorAll('.rdr-fchip').forEach(c => {
+    if (c.dataset.lang === lang) c.classList.add('active-' + lang);
+  });
+  rdrApplyFilters();
+}
+function rdrResetChips() {
+  document.querySelectorAll('.rdr-fchip').forEach(c => c.className = 'rdr-fchip');
+  document.querySelector('.rdr-fchip[data-lang="all"]').classList.add('active-all');
+}
+function rdrOnSearch() {
+  rdrSearchQuery = document.getElementById('rdrSearchInput').value.toLowerCase();
+  rdrCurrentPage = 1; rdrApplyFilters();
+}
+function rdrApplyFilters(silent) {
+  rdrFiltered = rdrAllEntries.filter(e => {
+    const lm = rdrCurrentFilter === 'all' || e.lang === rdrCurrentFilter;
+    const tm = !rdrSearchQuery || e.text.toLowerCase().includes(rdrSearchQuery);
+    return lm && tm;
+  });
+  if (!silent) { rdrRenderPage(); rdrRenderPagination(); }
+  rdrUpdateCounts();
+}
+
+// Render
+function rdrRenderPage() {
+  const list  = document.getElementById('rdrEntriesList');
+  const empty = document.getElementById('rdrEmptyState');
+  const start = (rdrCurrentPage - 1) * RDR_PAGE_SIZE;
+  const slice = rdrFiltered.slice(start, start + RDR_PAGE_SIZE);
+
+  document.getElementById('rdrShowingCount').textContent = rdrFiltered.length.toLocaleString();
+
+  if (!slice.length) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    empty.querySelector('p').textContent =
+      rdrAllEntries.length ? 'No entries match this filter.' : 'All entries were deleted.';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = slice.map(e => {
+    const idx = rdrAllEntries.findIndex(x => x.id === e.id) + 1;
+    return `<div class="rdr-entry lang-${e.lang}" data-rdr-id="${e.id}">
+      <div class="entry-text">${escHtml(e.text)}</div>
+      <div class="rdr-entry-right">
+        <div class="chip ${e.lang}">${e.lang}</div>
+        <div class="rdr-entry-num">#${idx}</div>
+        <button class="rdr-del-btn" onclick="rdrDeleteEntry(${e.id})">✕ del</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function rdrRenderPagination() {
+  const bar   = document.getElementById('rdrPaginationBar');
+  const total = rdrFiltered.length;
+  const maxP  = Math.ceil(total / RDR_PAGE_SIZE);
+  if (maxP <= 1) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+
+  const nums = document.getElementById('rdrPageNumbers');
+  nums.innerHTML = '';
+  const pages = rdrCurrentPage > 3 && maxP > 7
+    ? [1, '…', ...Array.from({length:3},(_,i)=>Math.max(2,rdrCurrentPage-1)+i).filter(p=>p>1&&p<maxP), '…', maxP]
+    : Array.from({length:maxP},(_,i)=>i+1);
+
+  // rebuild using buildPagination helper
+  bar.innerHTML = buildPagination(rdrCurrentPage, maxP, 'rdrGoToPage');
+  const infoSpan = document.createElement('span');
+  infoSpan.style.cssText = 'margin-left:auto;color:var(--dim);font-family:var(--mono);font-size:10px';
+  infoSpan.id = 'rdrPageInfo';
+  infoSpan.textContent = (((rdrCurrentPage-1)*RDR_PAGE_SIZE)+1) + '–' +
+    Math.min(rdrCurrentPage*RDR_PAGE_SIZE, total) + ' of ' + total;
+  bar.appendChild(infoSpan);
+  document.getElementById('rdrPrevBtn') && (document.getElementById('rdrPrevBtn').disabled = rdrCurrentPage <= 1);
+  document.getElementById('rdrNextBtn') && (document.getElementById('rdrNextBtn').disabled = rdrCurrentPage >= maxP);
+}
+
+function rdrGoToPage(p) { rdrCurrentPage = p; rdrRenderPage(); rdrRenderPagination(); document.getElementById('rdrEntriesList').scrollTop = 0; }
+function rdrChangePage(dir) {
+  const maxP = Math.ceil(rdrFiltered.length / RDR_PAGE_SIZE);
+  rdrCurrentPage = Math.max(1, Math.min(maxP, rdrCurrentPage + dir));
+  rdrRenderPage(); rdrRenderPagination(); document.getElementById('rdrEntriesList').scrollTop = 0;
+}
+
+// Stats
+function rdrLangCounts(arr) {
+  const c = { taglish: 0, tagalog: 0, english: 0 };
+  arr.forEach(e => { if (c[e.lang] !== undefined) c[e.lang]++; });
+  return c;
+}
+function rdrUpdateCounts() {
+  const c = rdrLangCounts(rdrAllEntries);
+  document.getElementById('rdrCAll').textContent     = rdrAllEntries.length.toLocaleString();
+  document.getElementById('rdrCTaglish').textContent = c.taglish.toLocaleString();
+  document.getElementById('rdrCTagalog').textContent = c.tagalog.toLocaleString();
+  document.getElementById('rdrCEnglish').textContent = c.english.toLocaleString();
+  rdrRenderBars(c);
+}
+function rdrRenderBars(c) {
+  const total = rdrAllEntries.length || 1;
+  document.getElementById('rdrLangBars').innerHTML =
+    ['taglish','tagalog','english'].map(lang => {
+      const n = c[lang]; const pct = Math.round(n / total * 100);
+      return `<div>
+        <div class="rdr-bar-meta"><span>${lang}</span><span class="rdr-bar-val">${n.toLocaleString()} · ${pct}%</span></div>
+        <div class="rdr-bar-track"><div class="rdr-bar-fill ${lang}" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+}
+
+// Delete
+function rdrDeleteEntry(id) {
+  const el = document.querySelector(`.rdr-entry[data-rdr-id="${id}"]`);
+  if (el) { el.classList.add('deleting'); setTimeout(() => el.remove(), 220); }
+  rdrUndoStack = { entries: [...rdrAllEntries], count: 1 };
+  rdrAllEntries = rdrAllEntries.filter(e => e.id !== id);
+  rdrShowUndo('1 entry deleted');
+  rdrApplyFilters(true);
+  setTimeout(() => { rdrApplyFilters(); }, 230);
+}
+function rdrDeleteFiltered() {
+  const ids = new Set(rdrFiltered.map(e => e.id));
+  const n   = ids.size;
+  if (!n) return;
+  rdrUndoStack  = { entries: [...rdrAllEntries], count: n };
+  rdrAllEntries = rdrAllEntries.filter(e => !ids.has(e.id));
+  rdrShowUndo(`${n} entr${n > 1 ? 'ies' : 'y'} deleted`);
+  rdrApplyFilters(); rdrUpdateCounts();
+}
+
+// Undo
+function rdrUndoDelete() {
+  if (!rdrUndoStack) return;
+  rdrAllEntries = rdrUndoStack.entries; rdrUndoStack = null;
+  rdrHideUndo(); rdrApplyFilters(); rdrUpdateCounts();
+}
+function rdrShowUndo(msg) {
+  clearTimeout(rdrUndoTimer);
+  document.getElementById('rdrUndoMsg').textContent = msg;
+  document.getElementById('rdrUndoToast').classList.add('visible');
+  rdrUndoTimer = setTimeout(() => { rdrHideUndo(); rdrUndoStack = null; }, 5000);
+}
+function rdrHideUndo() { document.getElementById('rdrUndoToast').classList.remove('visible'); }
+
+// Download
+function rdrDownloadAll() {
+  const data = rdrCurrentFilter === 'all' ? rdrAllEntries : rdrAllEntries.filter(e => e.lang === rdrCurrentFilter);
+  if (!data.length) return;
+  const suffix = rdrCurrentFilter === 'all' ? 'cleaned' : rdrCurrentFilter;
+  const blob = new Blob([data.map(e => e.text).join('\n')], { type: 'text/plain;charset=utf-8' });
+  dl(blob, `tagcol_${suffix}.txt`);
+}
+function rdrDownloadFiltered() {
+  if (!rdrFiltered.length) return;
+  const blob = new Blob([rdrFiltered.map(e => e.text).join('\n')], { type: 'text/plain;charset=utf-8' });
+  dl(blob, `tagcol_visible_${rdrCurrentFilter}.txt`);
+}
 
 // ── BOOT ──────────────────────────────────────────
 init();
