@@ -1,0 +1,2505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAGCOL</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0c0c0b;
+  --surface: #141413;
+  --sur2:    #1c1c1a;
+  --sur3:    #222220;
+  --bdr:     #272724;
+  --bdr2:    #333330;
+  --bdr3:    #444440;
+  --text:    #e2e2dc;
+  --muted:   #7a7a74;
+  --dim:     #444440;
+  --accent:  #e8e8e0;
+  --pos:     #4ade80;
+  --neg:     #f87171;
+  --neu:     #94a3b8;
+  --warn:    #fbbf24;
+  --pos-bg:  rgba(74,222,128,0.07);
+  --neg-bg:  rgba(248,113,113,0.07);
+  --neu-bg:  rgba(148,163,184,0.07);
+  --warn-bg: rgba(251,191,36,0.07);
+  --mono:    'Space Mono', monospace;
+  --sans:    'DM Sans', sans-serif;
+  --r:       4px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+::selection{background:rgba(232,232,224,0.15)}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13.5px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+header{border-bottom:1px solid var(--bdr);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:100}
+.h-left{display:flex;align-items:center;gap:12px}
+.wordmark{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--accent)}
+.wordmark-sub{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.05em}
+.vdiv{width:1px;height:16px;background:var(--bdr2)}
+.badge{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);border:1px solid var(--bdr2);padding:2px 7px;border-radius:2px;text-transform:uppercase}
+
+/* Mode tabs */
+.mode-tab{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;padding:5px 14px;border:1px solid var(--bdr2);background:var(--sur2);color:var(--muted);cursor:pointer;border-radius:var(--r);transition:all .13s;text-transform:uppercase}
+.mode-tab:hover{color:var(--text);border-color:var(--bdr3);background:var(--sur3)}
+.mode-tab.active{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.rev-badge{display:none;background:var(--warn);color:var(--bg);font-size:8px;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:4px;vertical-align:middle}
+
+/* Stats bar */
+.stats-bar{display:flex;align-items:center;font-family:var(--mono);font-size:11px}
+.stat{display:flex;align-items:center;gap:7px;padding:0 14px;border-left:1px solid var(--bdr)}
+.stat-lbl{color:var(--dim);font-size:10px;letter-spacing:.06em}
+.stat-val{color:var(--text);font-weight:700}
+.s-pos{color:var(--pos);font-weight:700}
+.s-neg{color:var(--neg);font-weight:700}
+.s-neu{color:var(--neu);font-weight:700}
+.s-warn{color:var(--warn);font-weight:700}
+.prog-wrap{display:flex;align-items:center;gap:10px;padding:0 14px;border-left:1px solid var(--bdr)}
+.prog-track{width:72px;height:2px;background:var(--bdr2);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.prog-pct{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:28px}
+
+/* ── LAYOUT ── */
+/* The app is a simple flex row. Each "mode" occupies full width as flex:1 */
+.app{display:flex;height:calc(100vh - 52px);overflow:hidden}
+
+/* Both collect and review panels are flex rows (sidebar + main) */
+/* They're toggled via display:none / display:flex */
+.collect-panel,.review-panel{
+  flex:1;
+  display:flex;
+  flex-direction:row;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.collect-panel.hidden,.review-panel.hidden{display:none!important}
+
+/* ── SHARED SIDEBAR ── */
+.sidebar{
+  width:300px;
+  flex-shrink:0;
+  border-right:1px solid var(--bdr);
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  background:var(--surface);
+}
+.collect-panel .sidebar{width:340px}
+
+/* ── SHARED MAIN AREA ── */
+.main-area{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* ── PANE (sidebar sections) ── */
+.pane{padding:16px 20px;border-bottom:1px solid var(--bdr)}
+.pane-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.pane-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+/* ── BUTTONS ── */
+.btn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;padding:9px 14px;border:1px solid var(--bdr2);background:var(--sur2);color:var(--muted);cursor:pointer;border-radius:var(--r);transition:all .13s;white-space:nowrap;text-align:center;text-transform:uppercase}
+.btn:hover{background:var(--sur3);border-color:var(--bdr3);color:var(--text)}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:var(--bg);border-color:var(--accent);width:100%}
+.btn-primary:hover{background:#d4d4cc;border-color:#d4d4cc;color:var(--bg)}
+.btn-sm{padding:6px 11px;font-size:10px}
+.btn-full{width:100%;display:block;text-align:center}
+.btn-danger{color:var(--neg);border-color:transparent;background:transparent}
+.btn-danger:hover{background:var(--neg-bg);border-color:rgba(248,113,113,.35);color:var(--neg)}
+.btn-warn{color:var(--warn);border-color:rgba(251,191,36,.35);background:var(--warn-bg)}
+.btn-warn:hover{background:rgba(251,191,36,.14);border-color:var(--warn)}
+.btn-row{display:flex;gap:7px}
+.btn-row .btn{flex:1}
+
+/* ── SOURCE SELECT ── */
+select{flex:1;background:var(--sur2);border:1px solid var(--bdr2);color:var(--text);font-family:var(--sans);font-size:13px;padding:8px 30px 8px 11px;border-radius:var(--r);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23444440' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .15s}
+select:focus{border-color:var(--bdr3)}
+
+/* ── TEXTAREA ── */
+textarea{flex:1;background:var(--sur2);border:1px solid var(--bdr2);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.65;padding:12px;border-radius:var(--r);resize:none;outline:none;transition:border-color .15s;min-height:120px}
+textarea:focus{border-color:var(--bdr3)}
+textarea::placeholder{color:var(--dim)}
+.input-pane{flex:1;display:flex;flex-direction:column;gap:10px;padding:16px 20px;border-bottom:1px solid var(--bdr);overflow:hidden}
+.line-hint{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.04em}
+
+/* ── MERGE ── */
+.merge-status{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;line-height:1.7;white-space:pre}
+
+/* ── TOOLBAR (top of main area) ── */
+.toolbar{padding:10px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.toolbar-left{display:flex;align-items:center;gap:12px}
+.entry-count{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.filter-tabs{display:flex;gap:2px}
+.ftab{font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:4px 10px;border:1px solid transparent;background:transparent;color:var(--dim);cursor:pointer;border-radius:var(--r);transition:all .13s;text-transform:uppercase}
+.ftab:hover{color:var(--muted)}
+.ftab.active{background:var(--sur2);border-color:var(--bdr2);color:var(--text)}
+
+/* ── BANNERS ── */
+.banner{display:none;align-items:center;justify-content:space-between;padding:8px 20px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;flex-shrink:0}
+.banner.visible{display:flex}
+.banner-warn{background:var(--warn-bg);border-bottom:1px solid rgba(251,191,36,.18);color:var(--warn)}
+.banner-neg{background:rgba(248,113,113,.06);border-bottom:1px solid rgba(248,113,113,.18);color:var(--neg)}
+.save-btn{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;padding:4px 13px;background:rgba(251,191,36,.14);border:1px solid var(--warn);color:var(--warn);border-radius:var(--r);cursor:pointer;transition:all .12s;text-transform:uppercase}
+.save-btn:hover{background:rgba(251,191,36,.22)}
+
+/* ── ENTRIES (collect) ── */
+.entries{flex:1;overflow-y:auto}
+.entry{border-bottom:1px solid var(--bdr);border-left:2px solid transparent;padding:13px 20px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:start;transition:background .1s,border-left-color .15s;position:relative}
+.entry:hover{background:var(--surface)}
+.entry.sent-positive{border-left-color:var(--pos)}
+.entry.sent-negative{border-left-color:var(--neg)}
+.entry.sent-neutral {border-left-color:var(--bdr3)}
+.entry.unlabeled    {border-left-color:var(--warn)}
+.entry-text{font-size:13.5px;line-height:1.65;color:var(--text);margin-bottom:7px;word-break:break-word}
+.entry-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;padding:2px 7px;border-radius:2px;border:1px solid var(--bdr2);color:var(--dim);background:var(--sur2)}
+.chip.taglish{color:#f59e0b;border-color:rgba(245,158,11,.22);background:rgba(245,158,11,.05)}
+.chip.tagalog{color:#60a5fa;border-color:rgba(96,165,250,.22);background:rgba(96,165,250,.05)}
+.chip.english{color:#a78bfa;border-color:rgba(167,139,250,.22);background:rgba(167,139,250,.05)}
+.chip.emoji  {color:#fb923c;border-color:rgba(251,146,60,.22);background:rgba(251,146,60,.05)}
+.chip.unsaved{color:var(--warn);border-color:rgba(251,191,36,.22);background:rgba(251,191,36,.05)}
+.chip.unl-chip{color:var(--neg);border-color:rgba(248,113,113,.22);background:rgba(248,113,113,.05)}
+.entry-controls{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+.sent-btns{display:flex;gap:3px}
+.sbtn{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.08em;padding:5px 9px;border-radius:var(--r);cursor:pointer;border:1px solid var(--bdr2);background:var(--sur2);color:var(--dim);position:relative;overflow:hidden;transition:background .12s,border-color .12s,color .12s,transform .07s;text-transform:uppercase}
+.sbtn:active{transform:scale(.88)}
+.sbtn[data-sent="positive"]:hover{background:var(--pos-bg);border-color:rgba(74,222,128,.4);color:var(--pos)}
+.sbtn[data-sent="negative"]:hover{background:var(--neg-bg);border-color:rgba(248,113,113,.4);color:var(--neg)}
+.sbtn[data-sent="neutral"]:hover {background:var(--neu-bg);border-color:rgba(148,163,184,.4);color:var(--neu)}
+.sbtn.active-positive{background:rgba(74,222,128,.13);border-color:var(--pos);color:var(--pos)}
+.sbtn.active-negative{background:rgba(248,113,113,.13);border-color:var(--neg);color:var(--neg)}
+.sbtn.active-neutral {background:rgba(148,163,184,.13);border-color:var(--neu);color:var(--neu)}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.2)}100%{transform:scale(1)}}
+.sbtn.just-selected{animation:pop .18s ease-out forwards}
+.ripple{position:absolute;border-radius:50%;transform:scale(0);animation:ripple-out .35s ease-out forwards;pointer-events:none}
+@keyframes ripple-out{to{transform:scale(4);opacity:0}}
+.entry-id{font-family:var(--mono);font-size:9.5px;color:var(--dim)}
+
+/* ── REVIEW ENTRIES ── */
+.review-entry{border-bottom:1px solid var(--bdr);border-left:3px solid transparent;padding:13px 18px;display:grid;grid-template-columns:30px 1fr auto auto;gap:12px;align-items:start;transition:background .1s,border-left-color .15s}
+.review-entry:hover{background:var(--surface)}
+.review-entry.sent-positive {border-left-color:var(--pos)}
+.review-entry.sent-negative {border-left-color:var(--neg)}
+.review-entry.sent-neutral  {border-left-color:var(--bdr3)}
+.review-entry.sent-unlabeled{border-left-color:var(--warn)}
+.review-entry.modified      {background:rgba(251,191,36,.03)}
+.r-id,.review-id{font-family:var(--mono);font-size:10px;color:var(--dim);padding-top:2px;text-align:right}
+.r-text,.review-text{font-size:13.5px;line-height:1.65;color:var(--text);margin-bottom:7px;word-break:break-word}
+.r-meta,.review-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lang-btn{font-family:var(--mono);font-size:9px;letter-spacing:.05em;padding:2px 7px;border-radius:2px;text-transform:uppercase;cursor:pointer;transition:all .12s;border:1px solid transparent}
+.lang-btn:hover{opacity:.75;transform:scale(1.06)}
+.lang-btn.taglish { color: #f59e0b; border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.09); }
+.lang-btn.tagalog { color: #60a5fa; border-color: rgba(96,165,250,.35); background: rgba(96,165,250,.09); }
+.lang-btn.english { color: #a78bfa; border-color: rgba(167,139,250,.35); background: rgba(167,139,250,.09); }
+.r-controls,.review-controls{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.density-chip,.density-info{font-family:var(--mono);font-size:9.5px;color:var(--dim);white-space:nowrap}
+.mod-dot,.modified-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--warn);margin-left:3px;vertical-align:middle}
+
+/* ── REVIEW SIDEBAR STATS ── */
+.stat-block{padding:14px 20px;border-bottom:1px solid var(--bdr)}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-family:var(--mono);font-size:10px}
+.stat-lbl2{color:var(--dim)}
+.stat-num{color:var(--text);font-weight:700}
+.stat-num.pos{color:var(--pos)}
+.stat-num.neg{color:var(--neg)}
+.stat-num.neu{color:var(--neu)}
+.stat-num.warn{color:var(--warn)}
+.stat-num.tgl{color:#f59e0b}
+.stat-num.tga{color:#60a5fa}
+.stat-num.eng{color:#a78bfa}
+
+/* ── REVIEW SEARCH ── */
+.r-search{background:var(--sur2);border:1px solid var(--bdr2);color:var(--text);font-family:var(--sans);font-size:12px;padding:7px 11px;border-radius:var(--r);outline:none;width:100%;transition:border-color .15s}
+.r-search:focus{border-color:var(--bdr3)}
+.r-search::placeholder{color:var(--dim)}
+
+/* ── REVIEW EMPTY STATE ── */
+#reviewEmpty{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;gap:7px;height:100%}
+
+/* ── EMPTY STATE ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:7px}
+.empty-glyph{font-family:var(--mono);font-size:28px;color:var(--bdr3);margin-bottom:4px}
+.empty-title{font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:.06em}
+.empty-sub{font-size:12px;color:var(--dim);opacity:.55}
+
+/* ── PAGINATION ── */
+.pagination{display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 20px;border-top:1px solid var(--bdr);background:var(--surface);flex-shrink:0}
+.page-btn{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 10px;border:1px solid var(--bdr2);background:var(--sur2);color:var(--dim);cursor:pointer;border-radius:var(--r);transition:all .12s;text-transform:uppercase;min-width:34px;text-align:center}
+.page-btn:hover:not(:disabled){background:var(--sur3);border-color:var(--bdr3);color:var(--text)}
+.page-btn:disabled{opacity:.3;cursor:default}
+.page-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.page-info{font-family:var(--mono);font-size:10px;color:var(--dim);padding:0 8px;white-space:nowrap}
+.page-ellipsis{font-family:var(--mono);font-size:10px;color:var(--dim);padding:0 4px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--sur3);border:1px solid var(--bdr3);color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:10px 16px;border-radius:var(--r);z-index:999;opacity:0;transform:translateY(6px);transition:all .18s ease;pointer-events:none;max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.toast-warn{border-color:rgba(251,191,36,.5);color:var(--warn)}
+.toast.toast-ok  {border-color:rgba(74,222,128,.5);color:var(--pos)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.visible{display:flex}
+.modal{background:var(--surface);border:1px solid var(--bdr2);border-radius:6px;padding:28px 32px;max-width:420px;width:90%}
+.modal-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--warn);text-transform:uppercase;margin-bottom:10px}
+.modal-body{font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:22px}
+.modal-body strong{color:var(--text);font-weight:600}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+
+/* ── SENT PILLS (preview) ── */
+.sent-pill{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:2px 8px;border-radius:2px;text-transform:uppercase;font-weight:700}
+.sent-pill.positive{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.35);color:var(--pos)}
+.sent-pill.negative{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);color:var(--neg)}
+.sent-pill.neutral {background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.35);color:var(--neu)}
+.sent-pill.null-pill{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);color:var(--warn)}
+.lang-pill{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.05em;padding:2px 7px;border-radius:2px;text-transform:uppercase}
+.lang-pill.taglish{color:#f59e0b;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.07)}
+.lang-pill.tagalog{color:#60a5fa;border:1px solid rgba(96,165,250,.3);background:rgba(96,165,250,.07)}
+.lang-pill.english{color:#a78bfa;border:1px solid rgba(167,139,250,.3);background:rgba(167,139,250,.07)}
+.lang-pill.other  {border:1px solid var(--bdr2);color:var(--dim);background:var(--sur2)}
+
+/* ── KEYBOARD FOCUS ── */
+.main-area{outline:none;position:relative}
+.main-area:focus-within .toolbar{border-bottom-color:var(--bdr3)}
+.kb-focus-ring{
+  pointer-events:none;
+  position:absolute;
+  inset:0;
+  border:1.5px solid rgba(232,232,224,0.12);
+  border-radius:0;
+  opacity:0;
+  transition:opacity .15s;
+  z-index:10;
+}
+.main-area.kb-focused .kb-focus-ring{opacity:1}
+
+/* Focus hint badge on toolbar */
+.kb-hint{
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;
+  color:var(--dim);margin-left:auto;
+  transition:color .15s;
+  user-select:none;
+}
+.main-area.kb-focused .kb-hint{color:var(--muted)}
+.kb-hint kbd{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:8.5px;
+  padding:1px 5px;border:1px solid var(--bdr2);
+  border-radius:2px;background:var(--sur2);color:var(--dim);
+  line-height:1.4;transition:border-color .15s,color .15s;
+}
+.main-area.kb-focused .kb-hint kbd{border-color:var(--bdr3);color:var(--text)}
+
+/* Shortcut tooltip popup */
+.kb-tooltip{
+  position:absolute;bottom:14px;right:14px;z-index:50;
+  background:var(--sur2);border:1px solid var(--bdr2);border-radius:var(--r);
+  padding:10px 14px;
+  font-family:var(--mono);font-size:10px;
+  display:none;flex-direction:column;gap:5px;
+  pointer-events:none;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.main-area.kb-focused .kb-tooltip{display:flex}
+.kb-tooltip-row{display:flex;align-items:center;gap:10px;color:var(--muted)}
+.kb-tooltip-row kbd{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;padding:2px 6px;border:1px solid var(--bdr3);
+  border-radius:2px;background:var(--sur3);color:var(--text);
+  font-size:9px;line-height:1.4;
+}
+.kb-tooltip-sep{height:1px;background:var(--bdr);margin:2px 0}
+
+/* Focused entry highlight */
+.entry.kb-active,.review-entry.kb-active{
+  background:rgba(232,232,224,0.04)!important;
+  outline:1px solid rgba(232,232,224,0.1);
+  outline-offset:-1px;
+}
+
+/* ── DELETE BUTTON ── */
+.del-btn{
+  opacity:0;
+  background:none;
+  border:1px solid transparent;
+  color:var(--dim);
+  font-size:12px;
+  cursor:pointer;
+  padding:3px 7px;
+  border-radius:var(--r);
+  line-height:1;
+  transition:all .12s;
+  flex-shrink:0;
+  font-family:var(--mono);
+  letter-spacing:.05em;
+  white-space:nowrap;
+}
+.del-btn:hover{
+  color:var(--neg);
+  border-color:rgba(248,113,113,.35);
+  background:var(--neg-bg);
+  opacity:1!important;
+}
+.entry:hover .del-btn,
+.review-entry:hover .del-btn{ opacity:.55; }
+
+/* ── READER PANEL ── */
+.reader-panel{
+  flex:1;
+  display:flex;
+  flex-direction:row;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.reader-panel.hidden{display:none!important}
+
+/* Reader drop zone */
+.rdr-drop-zone{
+  width:100%;background:var(--sur2);
+  border:1px dashed var(--bdr2);border-radius:var(--r);
+  padding:22px 16px;text-align:center;cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+.rdr-drop-zone:hover,.rdr-drop-zone.drag-over{
+  border-color:var(--warn);background:var(--warn-bg);
+}
+.rdr-drop-zone-icon{font-size:20px;opacity:.45;margin-bottom:6px}
+.rdr-drop-zone-text{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;line-height:1.7}
+.rdr-drop-zone-text strong{color:var(--warn)}
+
+/* Reader file loaded chip */
+.rdr-file-loaded{
+  background:var(--sur2);border:1px solid var(--bdr2);border-radius:var(--r);
+  padding:9px 12px;font-family:var(--mono);font-size:10px;color:var(--muted);
+  letter-spacing:.04em;display:none;align-items:center;justify-content:space-between;gap:8px;
+}
+.rdr-file-loaded.visible{display:flex}
+.rdr-file-name{color:var(--warn);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+
+/* Reader lang bars */
+.rdr-lang-bars{display:flex;flex-direction:column;gap:9px}
+.rdr-bar-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.04em;margin-bottom:3px;text-transform:uppercase}
+.rdr-bar-meta .rdr-bar-val{color:var(--muted)}
+.rdr-bar-track{height:3px;background:var(--bdr2);border-radius:2px;overflow:hidden}
+.rdr-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.rdr-bar-fill.taglish{background:#f59e0b}
+.rdr-bar-fill.tagalog{background:#60a5fa}
+.rdr-bar-fill.english{background:#a78bfa}
+
+/* Reader filter chips */
+.rdr-lang-filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.rdr-fchip{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;
+  padding:4px 10px;border-radius:2px;border:1px solid var(--bdr2);
+  background:var(--sur2);color:var(--dim);cursor:pointer;
+  transition:all .13s;text-transform:uppercase;user-select:none;
+}
+.rdr-fchip:hover{color:var(--text);border-color:var(--bdr3)}
+.rdr-fchip.active-taglish{color:#f59e0b;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.07)}
+.rdr-fchip.active-tagalog{color:#60a5fa;border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.07)}
+.rdr-fchip.active-english{color:#a78bfa;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.07)}
+.rdr-fchip.active-all    {color:var(--text);border-color:var(--bdr3);background:var(--sur3)}
+.rdr-fchip-count{font-size:9px;opacity:.7;margin-left:3px}
+
+/* Reader entries */
+.rdr-entry{
+  border-bottom:1px solid var(--bdr);border-left:2px solid transparent;
+  padding:11px 16px 11px 20px;
+  display:grid;grid-template-columns:1fr auto;
+  gap:10px;align-items:start;transition:background .1s;position:relative;
+}
+.rdr-entry:hover{background:var(--surface)}
+.rdr-entry:hover .rdr-del-btn{opacity:1}
+.rdr-entry.lang-taglish{border-left-color:#f59e0b}
+.rdr-entry.lang-tagalog{border-left-color:#60a5fa}
+.rdr-entry.lang-english{border-left-color:#a78bfa}
+.rdr-entry.deleting{animation:rdrFadeSlide .22s ease forwards}
+@keyframes rdrFadeSlide{
+  to{opacity:0;transform:translateX(-8px);max-height:0;padding:0;overflow:hidden}
+}
+.rdr-entry-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.rdr-entry-num{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.03em}
+
+/* Reader del btn */
+.rdr-del-btn{
+  font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;
+  padding:2px 8px;border:1px solid rgba(248,113,113,.2);
+  background:transparent;color:var(--neg);cursor:pointer;
+  border-radius:2px;text-transform:uppercase;
+  opacity:0;transition:opacity .15s,background .13s,border-color .13s;
+  white-space:nowrap;
+}
+.rdr-del-btn:hover{background:var(--neg-bg);border-color:rgba(248,113,113,.45);opacity:1!important}
+
+/* Reader del-visible btn */
+.rdr-btn-del-filtered{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;
+  padding:5px 11px;border:1px solid rgba(248,113,113,.25);
+  background:var(--neg-bg);color:var(--neg);cursor:pointer;
+  border-radius:var(--r);transition:all .13s;text-transform:uppercase;white-space:nowrap;
+}
+.rdr-btn-del-filtered:hover{background:rgba(248,113,113,.13);border-color:var(--neg)}
+
+/* Reader search */
+.rdr-search-wrap{position:relative}
+.rdr-search-input{
+  background:var(--sur2);border:1px solid var(--bdr2);color:var(--text);
+  font-family:var(--sans);font-size:12px;padding:5px 10px 5px 28px;
+  border-radius:var(--r);outline:none;width:180px;transition:border-color .15s,width .2s;
+}
+.rdr-search-input:focus{border-color:var(--bdr3);width:220px}
+.rdr-search-input::placeholder{color:var(--dim)}
+.rdr-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);pointer-events:none;font-size:11px}
+
+/* Reader empty */
+.rdr-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;color:var(--dim);
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;padding:40px;text-align:center;
+}
+.rdr-empty .icon{font-size:28px;opacity:.3}
+.rdr-empty p{line-height:1.8;max-width:300px}
+
+/* Reader undo toast */
+.rdr-undo-toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--sur3);border:1px solid var(--bdr3);border-radius:var(--r);
+  font-family:var(--mono);font-size:11px;color:var(--text);
+  padding:10px 18px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);transition:transform .22s ease;z-index:999;
+  white-space:nowrap;
+}
+.rdr-undo-toast.visible{transform:translateX(-50%) translateY(0)}
+.rdr-undo-btn{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;
+  padding:3px 11px;border:1px solid var(--warn);background:var(--warn-bg);
+  color:var(--warn);cursor:pointer;border-radius:2px;text-transform:uppercase;
+  transition:background .13s;
+}
+.rdr-undo-btn:hover{background:rgba(251,191,36,.14)}
+
+/* Reader btn-dl variants */
+.btn-rdr-dl{background:var(--pos-bg);border-color:rgba(74,222,128,.25);color:var(--pos);width:100%;margin-top:8px}
+.btn-rdr-dl:hover{background:rgba(74,222,128,.13);border-color:var(--pos)}
+.btn-rdr-dl:disabled{opacity:.25}
+.btn-rdr-dl2{background:var(--warn-bg);border-color:rgba(251,191,36,.25);color:var(--warn);width:100%;margin-top:6px}
+.btn-rdr-dl2:hover{background:rgba(251,191,36,.13);border-color:var(--warn)}
+.btn-rdr-dl2:disabled{opacity:.25}
+
+/* Reader about-pane */
+.rdr-about-pane{padding:14px 20px}
+.rdr-about-row{
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:10px;color:var(--dim);
+  letter-spacing:.04em;padding:3px 0;
+}
+.rdr-about-row span{color:var(--muted)}
+
+/* Deletion animation */
+@keyframes entryFadeOut{
+  from{opacity:1;max-height:200px;transform:scaleY(1)}
+  to  {opacity:0;max-height:0;padding-top:0;padding-bottom:0;transform:scaleY(0)}
+}
+.entry.deleting,.review-entry.deleting{
+  animation:entryFadeOut .2s ease forwards;
+  transform-origin:top;
+  overflow:hidden;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="wordmark">TAGCOL</div>
+    <div class="vdiv"></div>
+    <div class="wordmark-sub">dataset collector</div>
+    <div class="badge">mggyzls</div>
+    <div class="vdiv"></div>
+    <button class="mode-tab active" id="modeCollect" onclick="setMode('collect')">COLLECT</button>
+    <button class="mode-tab" id="modeReview" onclick="setMode('review')">REVIEW <span class="rev-badge" id="revBadge"></span></button>
+    <button class="mode-tab" id="modeReader" onclick="setMode('reader')">READER</button>
+  </div>
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-lbl">total</span><span class="stat-val" id="statTotal">0</span></div>
+    <div class="stat"><span class="s-pos" id="statPos">P: 0</span></div>
+    <div class="stat"><span class="s-neg" id="statNeg">N: 0</span></div>
+    <div class="stat"><span class="s-neu" id="statNeu">U: 0</span></div>
+    <div class="stat"><span class="s-warn" id="statUnl">⚠ 0</span></div>
+    <div class="prog-wrap">
+      <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <span class="prog-pct" id="progPct">0%</span>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- ══ COLLECT PANEL ══ -->
+  <div class="collect-panel" id="collectPanel">
+
+    <!-- Collect Sidebar -->
+    <div class="sidebar">
+      <div class="pane">
+        <div class="pane-lbl">Source</div>
+        <select id="srcSelect">
+          <option value="Facebook">Facebook</option>
+          <option value="reddit" selected>Reddit</option>
+          <option value="youtube">YouTube</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="input-pane">
+        <div class="pane-lbl">Input</div>
+        <textarea id="inputArea" placeholder="Paste posts here — one per line&#10;&#10;Grabe naman 'to, sobrang ganda!&#10;This is so unfair talaga&#10;Sana all may ganito…&#10;Pwede lagyan emoji!!🧑🏻‍💻🧑🏻‍💻"></textarea>
+        <div class="line-hint" id="lineHint">0 lines detected</div>
+        <button class="btn btn-primary" onclick="processBatch()">PROCESS BATCH</button>
+      </div>
+      <div class="pane">
+        <div class="pane-lbl">Export</div>
+        <div class="btn-row">
+          <button class="btn btn-sm" onclick="exportJSON()">↓ JSON</button>
+          <button class="btn btn-sm btn-danger" onclick="confirmClear()">✕ CLEAR</button>
+        </div>
+        <div style="margin-top:7px;">
+          <label class="btn btn-sm btn-full" style="cursor:pointer;">
+            ⊙ PREVIEW JSON FILE
+            <input type="file" accept=".json,.jsonl" style="display:none" onchange="handlePreviewFile(event)">
+          </label>
+        </div>
+      </div>
+      <div class="pane">
+        <div class="pane-lbl">Merge JSONL / JSON</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <label class="btn btn-sm" style="cursor:pointer;">
+            ↑ SELECT FILES
+            <input type="file" accept=".jsonl,.json" multiple style="display:none" onchange="handleMerge(event)">
+          </label>
+          <button class="btn btn-sm" id="exportMergeBtn" style="display:none" onclick="exportMerged()">↓ EXPORT MERGED JSON</button>
+        </div>
+        <div class="merge-status" id="mergeStatus"></div>
+      </div>
+    </div>
+
+    <!-- Collect Main -->
+    <div class="main-area" id="collectMain" tabindex="-1">
+      <div class="kb-focus-ring"></div>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <span class="entry-count" id="entryCount">0 entries</span>
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="setFilter('all',this)">All</button>
+            <button class="ftab" onclick="setFilter('positive',this)">Positive</button>
+            <button class="ftab" onclick="setFilter('negative',this)">Negative</button>
+            <button class="ftab" onclick="setFilter('neutral',this)">Neutral</button>
+            <button class="ftab" onclick="setFilter('unlabeled',this)">Unlabeled</button>
+            <button class="ftab" onclick="setFilter('taglish',this)">Taglish</button>
+          </div>
+        </div>
+        <div class="kb-hint" title="Click the entries panel to enable keyboard shortcuts">
+          <span>click to focus</span>
+          <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>
+          <span style="margin:0 1px">·</span>
+          <kbd>↑</kbd><kbd>↓</kbd>
+        </div>
+      </div>
+      <div class="banner banner-neg" id="unlabeledBanner">
+        <span id="unlabeledText">0 entries not yet labeled</span>
+        <button class="btn btn-sm btn-warn" onclick="setFilter('unlabeled', document.querySelector('#collectPanel .ftab:nth-child(5)'))">VIEW UNLABELED</button>
+      </div>
+      <div class="banner banner-warn" id="pendingBanner">
+        <span id="pendingText">0 new entries — label sentiments then save</span>
+        <button class="save-btn" onclick="saveBatch()">SAVE TO DATASET</button>
+      </div>
+      <div class="entries" id="entriesList">
+        <div class="empty">
+          <div class="empty-glyph">⌗</div>
+          <div class="empty-title">No entries yet</div>
+          <div class="empty-sub">Paste posts and click Process Batch</div>
+        </div>
+      </div>
+      <div class="pagination" id="paginationBar" style="display:none;"></div>
+      <div class="kb-tooltip" id="collectKbTooltip">
+        <div class="kb-tooltip-row"><kbd>1</kbd> Positive</div>
+        <div class="kb-tooltip-row"><kbd>2</kbd> Negative</div>
+        <div class="kb-tooltip-row"><kbd>3</kbd> Neutral</div>
+        <div class="kb-tooltip-sep"></div>
+        <div class="kb-tooltip-row"><kbd>↑</kbd> Previous</div>
+        <div class="kb-tooltip-row"><kbd>↓</kbd> Next</div>
+      </div>
+    </div>
+
+  </div><!-- /collect-panel -->
+
+  <!-- ══ REVIEW PANEL ══ -->
+  <div class="review-panel hidden" id="reviewPanel">
+
+    <!-- Review Sidebar -->
+    <div class="sidebar">
+      <div class="pane">
+        <div class="pane-lbl">Import</div>
+        <label class="btn btn-sm btn-full" style="cursor:pointer;">
+          ↑ LOAD PROCESSED JSON
+          <input type="file" accept=".json,.jsonl" style="display:none" onchange="handleReviewLoad(event)">
+        </label>
+      </div>
+      <div class="pane">
+        <div class="pane-lbl">Export</div>
+        <button class="btn btn-sm btn-full" onclick="exportReview()" style="margin-bottom:6px;">↓ EXPORT CORRECTED JSON</button>
+        <button class="btn btn-sm btn-full" onclick="resetReviewChanges()">RESET CHANGES</button>
+      </div>
+      <div class="pane">
+        <div class="pane-lbl">Search</div>
+        <input class="r-search" id="reviewSearch" placeholder="Search text, ID, source…" oninput="onReviewSearch()">
+      </div>
+      <div class="stat-block">
+        <div class="pane-lbl" style="margin-bottom:8px;">Sentiment Balance</div>
+        <div class="stat-row"><span class="stat-lbl2">positive</span><span class="stat-num pos" id="rstPos">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">negative</span><span class="stat-num neg" id="rstNeg">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">neutral</span> <span class="stat-num neu" id="rstNeu">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">unlabeled</span><span class="stat-num warn" id="rstUnl">—</span></div>
+      </div>
+      <div class="stat-block">
+        <div class="pane-lbl" style="margin-bottom:8px;">Language Type</div>
+        <div class="stat-row"><span class="stat-lbl2">taglish</span><span class="stat-num tgl" id="rstTgl">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">tagalog</span><span class="stat-num tga" id="rstTga">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">english</span><span class="stat-num eng" id="rstEng">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">other</span>  <span class="stat-num"    id="rstOth">—</span></div>
+      </div>
+      <div class="stat-block">
+        <div class="pane-lbl" style="margin-bottom:8px;">Code-Switch Density</div>
+        <div class="stat-row"><span class="stat-lbl2">0–20%</span>  <span class="stat-num" id="rstD0">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">21–40%</span> <span class="stat-num" id="rstD1">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">41–60%</span> <span class="stat-num" id="rstD2">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">61–80%</span> <span class="stat-num" id="rstD3">—</span></div>
+        <div class="stat-row"><span class="stat-lbl2">81–100%</span><span class="stat-num" id="rstD4">—</span></div>
+      </div>
+    </div>
+
+    <!-- Review Main -->
+    <div class="main-area" id="reviewMain" tabindex="-1">
+      <div class="kb-focus-ring"></div>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <span class="entry-count" id="reviewCount">0 entries</span>
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="setRevFilter('all',this)">All</button>
+            <button class="ftab" onclick="setRevFilter('positive',this)">Positive</button>
+            <button class="ftab" onclick="setRevFilter('negative',this)">Negative</button>
+            <button class="ftab" onclick="setRevFilter('neutral',this)">Neutral</button>
+            <button class="ftab" onclick="setRevFilter('taglish',this)">Taglish</button>
+            <button class="ftab" onclick="setRevFilter('modified',this)">Modified</button>
+          </div>
+          <div class="filter-tabs" style="margin-left:8px;padding-left:8px;border-left:1px solid var(--bdr2);">
+            <button class="ftab" onclick="setRevFilter('d0',this)" title="0–20% code-switch density">0–20%</button>
+            <button class="ftab" onclick="setRevFilter('d1',this)" title="21–40% code-switch density">21–40%</button>
+            <button class="ftab" onclick="setRevFilter('d2',this)" title="41–60% code-switch density">41–60%</button>
+            <button class="ftab" onclick="setRevFilter('d3',this)" title="61–80% code-switch density">61–80%</button>
+            <button class="ftab" onclick="setRevFilter('d4',this)" title="81–100% code-switch density">81–100%</button>
+          </div>
+        </div>
+        <div class="kb-hint" title="Click the entries panel to enable keyboard shortcuts">
+          <span>click to focus</span>
+          <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>
+          <span style="margin:0 1px">·</span>
+          <kbd>↑</kbd><kbd>↓</kbd>
+        </div>
+      </div>
+      <div class="banner banner-warn" id="revChangesBanner">
+        <span id="revChangesText">0 modifications</span>
+        <button class="btn btn-sm btn-warn" onclick="exportReview()">↓ EXPORT CORRECTED JSON</button>
+      </div>
+      <div class="empty" id="reviewEmpty">
+          <div class="empty-glyph">⌗</div>
+          <div class="empty-title">No file loaded</div>
+          <div class="empty-sub">Load a processed JSON from the notebook</div>
+        </div>
+      <div class="entries" id="reviewEntries"></div>
+      <div class="pagination" id="reviewPagBar" style="display:none;"></div>
+      <div class="kb-tooltip" id="reviewKbTooltip">
+        <div class="kb-tooltip-row"><kbd>1</kbd> Positive</div>
+        <div class="kb-tooltip-row"><kbd>2</kbd> Negative</div>
+        <div class="kb-tooltip-row"><kbd>3</kbd> Neutral</div>
+        <div class="kb-tooltip-sep"></div>
+        <div class="kb-tooltip-row"><kbd>↑</kbd> Previous</div>
+        <div class="kb-tooltip-row"><kbd>↓</kbd> Next</div>
+      </div>
+    </div>
+
+  </div><!-- /review-panel -->
+
+  <!-- ══ READER PANEL ══ -->
+  <div class="reader-panel hidden" id="readerPanel">
+
+    <!-- Reader Sidebar -->
+    <div class="sidebar" style="width:300px">
+      <div class="pane">
+        <div class="pane-lbl">Load .txt Dataset</div>
+        <div class="rdr-drop-zone" id="rdrDropZone">
+          <div class="rdr-drop-zone-icon">📂</div>
+          <div class="rdr-drop-zone-text">Drop <strong>.txt</strong> here<br>or <strong>click to browse</strong></div>
+        </div>
+        <input type="file" id="rdrFileInput" accept=".txt" style="display:none">
+        <div class="rdr-file-loaded" id="rdrFileLoaded">
+          <span class="rdr-file-name" id="rdrFileName">—</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap" id="rdrFileLines">0 lines</span>
+        </div>
+        <div style="margin-top:8px;display:none" id="rdrReloadWrap">
+          <button class="btn btn-sm btn-full" onclick="document.getElementById('rdrFileInput').click()">↺ LOAD DIFFERENT FILE</button>
+        </div>
+      </div>
+      <div class="pane" id="rdrStatsPane" style="display:none">
+        <div class="pane-lbl">Corpus Stats</div>
+        <div class="rdr-lang-bars" id="rdrLangBars"></div>
+      </div>
+      <div class="pane" id="rdrFilterPane" style="display:none">
+        <div class="pane-lbl">Filter Language</div>
+        <div class="rdr-lang-filters">
+          <div class="rdr-fchip active-all" data-lang="all" onclick="rdrSetFilter('all')">ALL <span class="rdr-fchip-count" id="rdrCAll">0</span></div>
+          <div class="rdr-fchip" data-lang="taglish" onclick="rdrSetFilter('taglish')">TAGLISH <span class="rdr-fchip-count" id="rdrCTaglish">0</span></div>
+          <div class="rdr-fchip" data-lang="tagalog" onclick="rdrSetFilter('tagalog')">TAGALOG <span class="rdr-fchip-count" id="rdrCTagalog">0</span></div>
+          <div class="rdr-fchip" data-lang="english" onclick="rdrSetFilter('english')">ENGLISH <span class="rdr-fchip-count" id="rdrCEnglish">0</span></div>
+        </div>
+      </div>
+      <div class="pane" id="rdrExportPane" style="display:none">
+        <div class="pane-lbl">Export</div>
+        <button class="btn btn-sm btn-rdr-dl btn-full" onclick="rdrDownloadAll()">↓ Download All Remaining</button>
+        <button class="btn btn-sm btn-rdr-dl2 btn-full" style="margin-top:6px" onclick="rdrDownloadFiltered()">↓ Download Visible Only</button>
+        <button class="btn btn-sm btn-danger btn-full" style="margin-top:6px" onclick="rdrClearAll()">✕ Clear Session</button>
+      </div>
+      <div class="rdr-about-pane">
+        <div class="rdr-about-row">Input<span>.txt (one line per entry)</span></div>
+        <div class="rdr-about-row">Lang detect<span>particle heuristics</span></div>
+        <div class="rdr-about-row">Delete<span>permanent (session)</span></div>
+        <div class="rdr-about-row">Undo<span>5 s window</span></div>
+        <div class="rdr-about-row">Output<span>clean .txt</span></div>
+      </div>
+    </div>
+
+    <!-- Reader Main -->
+    <div class="main-area" id="readerMain">
+      <div class="toolbar" id="rdrToolbar" style="display:none">
+        <div class="toolbar-left">
+          <span class="entry-count"><span style="color:var(--text);font-weight:700" id="rdrShowingCount">0</span> entries</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="rdr-btn-del-filtered" onclick="rdrDeleteFiltered()">✕ Delete Visible</button>
+          <div class="rdr-search-wrap">
+            <span class="rdr-search-icon">⌕</span>
+            <input type="text" class="rdr-search-input" id="rdrSearchInput" placeholder="Search…" oninput="rdrOnSearch()">
+          </div>
+        </div>
+      </div>
+      <div class="entries" id="rdrEntriesList"></div>
+      <div class="rdr-empty" id="rdrEmptyState">
+        <div class="icon">◈</div>
+        <p>Drop a .txt file into the sidebar<br>to begin reading.</p>
+      </div>
+      <div class="pagination" id="rdrPaginationBar" style="display:none">
+        <button class="page-btn" id="rdrPrevBtn" onclick="rdrChangePage(-1)">← PREV</button>
+        <div id="rdrPageNumbers" style="display:flex;gap:4px"></div>
+        <button class="page-btn" id="rdrNextBtn" onclick="rdrChangePage(1)">NEXT →</button>
+        <span style="margin-left:auto;color:var(--dim);font-family:var(--mono);font-size:10px" id="rdrPageInfo"></span>
+      </div>
+    </div>
+
+  </div><!-- /reader-panel -->
+
+</div><!-- /app -->
+
+<!-- Preview Modal (JSON viewer) -->
+<div class="modal-overlay" id="previewOverlay">
+  <div style="background:var(--surface);border:1px solid var(--bdr2);border-radius:6px;width:100%;max-width:1100px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--bdr);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">JSON Preview</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--muted);" id="previewFilename"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="display:flex;gap:14px;font-family:var(--mono);font-size:10px;" id="previewStats"></div>
+        <button class="btn btn-sm" onclick="closePreview()">✕ CLOSE</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 22px;border-bottom:1px solid var(--bdr);">
+      <input style="background:var(--sur2);border:1px solid var(--bdr2);color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 11px;border-radius:var(--r);outline:none;width:240px;" placeholder="Search text…" id="previewSearch" oninput="onPreviewSearch()">
+      <div style="display:flex;gap:4px;" id="previewFilterRow">
+        <button class="ftab active" onclick="setPreviewFilter('all',this)">All</button>
+        <button class="ftab" onclick="setPreviewFilter('positive',this)">Positive</button>
+        <button class="ftab" onclick="setPreviewFilter('negative',this)">Negative</button>
+        <button class="ftab" onclick="setPreviewFilter('neutral',this)">Neutral</button>
+        <button class="ftab" onclick="setPreviewFilter('null',this)">Unlabeled</button>
+        <button class="ftab" onclick="setPreviewFilter('taglish',this)">Taglish</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;" id="previewTable">
+        <thead style="position:sticky;top:0;background:var(--sur2);z-index:2;">
+          <tr>
+            <th style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;font-weight:700;padding:9px 14px;text-align:left;border-bottom:1px solid var(--bdr2);white-space:nowrap;width:50px;">ID</th>
+            <th style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;font-weight:700;padding:9px 14px;text-align:left;border-bottom:1px solid var(--bdr2);">Text</th>
+            <th style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;font-weight:700;padding:9px 14px;text-align:left;border-bottom:1px solid var(--bdr2);white-space:nowrap;">Sentiment</th>
+            <th style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;font-weight:700;padding:9px 14px;text-align:left;border-bottom:1px solid var(--bdr2);white-space:nowrap;">Language</th>
+            <th style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;font-weight:700;padding:9px 14px;text-align:left;border-bottom:1px solid var(--bdr2);white-space:nowrap;">Density</th>
+            <th style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;font-weight:700;padding:9px 14px;text-align:left;border-bottom:1px solid var(--bdr2);white-space:nowrap;">Range</th>
+            <th style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;font-weight:700;padding:9px 14px;text-align:left;border-bottom:1px solid var(--bdr2);white-space:nowrap;">Source</th>
+          </tr>
+        </thead>
+        <tbody id="previewTableBody"></tbody>
+      </table>
+      <div style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:8px;color:var(--dim);font-family:var(--mono);font-size:11px;" id="previewEmpty">
+        <div>⌗</div><div>No matching entries</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 22px;border-top:1px solid var(--bdr);background:var(--surface);" id="previewPagination"></div>
+  </div>
+</div>
+
+<div class="rdr-undo-toast" id="rdrUndoToast">
+  <span id="rdrUndoMsg">1 entry deleted</span>
+  <button class="rdr-undo-btn" onclick="rdrUndoDelete()">↩ Undo</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script>
+// ── WORD LISTS ───────────────────────────────────
+const ENGLISH_WORDS = new Set([
+  'the','is','are','was','were','be','been','being','have','has','had',
+  'do','does','did','will','would','could','should','may','might','must',
+  'a','an','and','but','or','if','in','on','at','to','for','of','with',
+  'this','that','these','those','i','you','he','she','we','they','it',
+  'my','your','his','her','our','their','its','me','him','us','them',
+  'what','when','where','how','why','who','which','not','no','yes','so',
+  'very','just','also','more','like','good','bad','great','really','too',
+  'right','wrong','true','false','new','old','big','small','want','need',
+  'go','get','make','know','think','see','say','look','come','back',
+  'there','here','now','then','still','already','never','always','ever',
+  'please','thank','sorry','hello','hi','bye','again','because','even',
+  'only','other','same','next','last','first','well','from','up','down',
+  'can','lot','all','any','some','few','much','many','most','own','long',
+  'life','time','day','year','way','man','woman','people','thing','place',
+  'im','ive','its','cant','dont','wont','isnt','arent','wasnt','havent',
+  'didnt','doesnt','wouldnt','couldnt','shouldnt','theyre','youre','were',
+  'thats','whats','hes','shes','weve','theyve','ill','id','youd','hed',
+  'ok','okay','yeah','nah','omg','lol','lmao','wtf','wow','oh','ah',
+  'imo','imho','tbh','ngl','fr','frfr','idk','irl','afaik','smh','fyi',
+  'brb','gtg','ttyl','gg','rn','af','lowkey','highkey','deadass','slay',
+  'periodt','bestie','bestfriend','bff','npc','pov','fyp','viral',
+  'ratio','based','cringe','sus','vibe','vibes','mood','lit','fire','cap',
+  'nocap','fam','goat','flex','shade','tea','spill','stan','simp','ship',
+  'toxic','queen','king','icon','legend','iconic','aesthetic',
+  'cancelled','cancel','woke','karen','boomer','zoomer',
+  'bet','facts','valid','mid','bussin','rizz','ate','delulu','ick',
+  'actually','literally','basically','honestly','seriously','definitely',
+  'love','hate','happy','sad','mad','excited','boring','beautiful','cute',
+  'pretty','funny','weird','crazy','amazing','awesome','terrible','horrible',
+  'angry','disgusted','shocked','surprised','proud','ashamed','guilty',
+  'jealous','lonely','anxious','stressed','overwhelmed','grateful','blessed',
+  'obsessed','disappointed','impressed','annoyed','frustrated','triggered',
+  'heartbroken','devastated','speechless','shook','unbothered','thriving',
+  'perfect','worst','best','better','worse','incredible','unbelievable',
+  'insane','wild','brutal','harsh','unfair','legendary','random','extra',
+  'basic','fake','real','genuine','honest','rude','mean','kind','sweet',
+  'hot','ugly','messy','clean','broke','rich','lucky',
+  'feels','feeling','thinking','saying','doing','going','coming','trying',
+  'starting','ending','missing','wanting','needing','loving','hating',
+  'watching','listening','reading','playing','working','studying','eating',
+  'sleeping','waking','crying','laughing','smiling','screaming','dying',
+  'support','share','follow','unfollow','block','report','post','comment',
+  'reply','retweet','like','subscribe','stream','drop','release','update',
+  'twitter','reddit','youtube','tiktok','instagram','facebook','discord',
+  'thread','tweet','story','reel','clip','video','photo','pic',
+  'caption','hashtag','trending','algorithm','feed','timeline',
+  'notification','dm','message','mention','tag',
+]);
+
+const TAGALOG_WORDS = new Set([
+  'ang','ng','na','sa','at','ay','mga','ko','mo','siya','kami','kayo','sila',
+  'namin','natin','nila','niya','niyo','ako','ikaw','ito','iyon','ire',
+  'dito','doon','diyan','kaya','pero','para','kung','dahil','kapag','pag',
+  'nang','lang','rin','din','ba','pa','nga','po','opo','ho','oo','hindi',
+  'wala','meron','may','mayroon','ano','sino','saan','kailan','paano',
+  'bakit','alin','naman','muna','ulit','pala','eh','kasi','daw','raw',
+  'kahit','habang','hanggang','mula','simula','tapos','pagkatapos',
+  'ganito','ganyan','ganoon','gaano','anong','sinong','kanino',
+  'akin','iyo','kanya','atin','amin','inyo','kanila','nating','aming','inyong',
+  'nilang','niyang','tayo','yun','yung','nung','pang','sang','diba','di',
+  'wag','huwag',
+  'maganda','ganda','pangit','masama','mabuti','mahal','mura',
+  'malaki','maliit','mabilis','mabagal','malakas','mahina','mataas','mababa',
+  'mainit','malamig','matamis','mapait','masarap','maalat','mabaho','mabango',
+  'matanda','bata','bago','luma','tama','mali','totoo','tunay','peke',
+  'masaya','malungkot','galit','takot','tuwa','saya','lungkot','inis',
+  'grabe','sobra','sobrang','napaka','napaaka','talaga','siguro','baka',
+  'lagi','palagi','minsan','ngayon','kahapon','bukas','mamaya','kanina',
+  'dati','noon','muli','halos','puro','buong','lahat','iba','ibang',
+  'sarili','parang','super',
+  'gusto','ayaw','kailangan','dapat','pwede','puwede','kaya','alam',
+  'pumunta','umuwi','kumain','matulog','gumising','tumawa','umiyak',
+  'magtrabaho','manood','makinig','magbasa','maglaro','magsalita',
+  'magtanong','sumagot','tumulong','magmahal','magalit','matakot','mainggit',
+  'nakakainis','nakakatawa','nakakaawa','nakakagulat','nakakahiya',
+  'nagpapasalamat','nagagalit','naiinis','nasasabik','nalulungkot',
+  'nahihiya','naiiyak','natutuwa','nakakatuwa','nakakakilig','nakakapagod',
+  'tao','lalaki','babae','bata','matanda','kaibigan','pamilya','asawa',
+  'ate','kuya','lola','lolo','nanay','tatay','anak','kapatid','pinsan',
+  'guro','doktor','estudyante','trabaho','paaralan','bahay','lugar',
+  'bansa','pilipinas','pilipino','probinsya','lungsod','barangay',
+  'puso','isip','buhay','mundo','langit','lupa','tubig','apoy','hangin',
+  'oras','araw','gabi','umaga','hapon','linggo','buwan','taon',
+  'pagkain','damit','pera','kotse','telepono','mukha','ngiti','luha',
+  'tawa','sakit','pangarap','pagmamahal','ugali',
+  'haha','hehe','huhu','hihi','char','charot','joke','gets',
+  'lods','lodi','pare','mare','brad','bai','beh','bes',
+  'werpa','werh','naks','naku','nako','sus','uy','oi','hoy','hay',
+  'shet','leche','gago','tanga','bobo','ulol','inutil','gaga',
+  'ampota','putangina','tangina','pota','punyeta','bwisit','hayop',
+  'astig','galing','husay','sarap','kilig','gigil','tampo','diskarte',
+  'chika','tsismis','chismis','marites','sana',
+  'luh','leh','weh','noh','erpat','ermat','repapips','tropa','jowa',
+  'syota','idol','neyms','beshie','petmalu','mumshie','mumsh','pards',
+  'tsong','tol','salamat','pasensya','ingat','sige','ayos',
+]);
+
+const EMOJI_RE = /[\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F1FF}\u{1F200}-\u{1F2FF}\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2300}-\u{23FF}\u{2460}-\u{24FF}\u{25A0}-\u{26FF}\u{2700}-\u{27BF}\u{2B00}-\u{2BFF}\u{3000}-\u{303F}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\u{20E3}\u{E0000}-\u{E007F}]/gu;
+
+// ── STATE ────────────────────────────────────────
+let dataset      = [];
+let pendingBatch = [];
+let filter       = 'all';
+let nextId       = 1;
+let mergedData   = [];
+
+// ── PAGINATION STATE ──────────────────────────────
+const PAGE_SIZE  = 50;
+let currentPage  = 1;
+
+// ── INIT ─────────────────────────────────────────
+function init() {
+  try {
+    const saved = localStorage.getItem('tagcol_v2');
+    if (saved) {
+      dataset = JSON.parse(saved);
+      if (dataset.length) nextId = Math.max(...dataset.map(d => d.id)) + 1;
+    }
+  } catch(e) { dataset = []; }
+  updateStats();
+  render();
+}
+
+function save() {
+  localStorage.setItem('tagcol_v2', JSON.stringify(dataset));
+}
+
+// ── TEXT PROCESSING ───────────────────────────────
+// Computes language_type only (density left blank for notebook)
+function analyzeText(text) {
+  const emojiMatches = text.match(EMOJI_RE) || [];
+  const emoji_count  = emojiMatches.length;
+  const has_emoji    = emoji_count > 0;
+
+  const tokens = text
+    .replace(EMOJI_RE, ' ')
+    .toLowerCase()
+    .split(/[\s,\.!\?;:\"\(\)\[\]\{\}\-\/\\]+/)
+    .map(t => t.trim())
+    .filter(t => t.length > 1);
+
+  let en = 0, tl = 0;
+  tokens.forEach(tok => {
+    const c = tok.replace(/[^a-z]/g, '');
+    if (ENGLISH_WORDS.has(c)) en++;
+    if (TAGALOG_WORDS.has(c)) tl++;
+  });
+
+  let language_type = 'other';
+  if (en > 0 && tl > 0)              language_type = 'taglish';
+  else if (tl > en && tl > 0)        language_type = 'tagalog';
+  else if (en > tl && en > 0)        language_type = 'english';
+
+  return { emoji_count, has_emoji, language_type };
+}
+
+// ── BATCH PROCESSING ──────────────────────────────
+function processBatch() {
+  const raw   = document.getElementById('inputArea').value;
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (!lines.length) { toast('No text to process', 'warn'); return; }
+
+  const source = document.getElementById('srcSelect').value;
+
+  pendingBatch = lines.map(line => {
+    const a = analyzeText(line);
+    return {
+      id: nextId++,
+      text: line,
+      source,
+      language_type: a.language_type,
+      // density fields — left blank, notebook will compute
+      code_switch_density: '',
+      density_range: '',
+      emoji_count: a.emoji_count,
+      has_emoji: a.has_emoji,
+      sentiment: null,   // null = explicitly unlabeled
+      labeled: false
+    };
+  });
+
+  document.getElementById('inputArea').value = '';
+  updateLineHint();
+
+  document.getElementById('pendingBanner').classList.add('visible');
+  document.getElementById('pendingText').textContent =
+    `${pendingBatch.length} new entries — label sentiments then save`;
+
+  filter = 'all';
+  document.querySelectorAll('.ftab').forEach((t,i) => t.classList.toggle('active', i === 0));
+  render();
+  toast(`${lines.length} post${lines.length > 1 ? 's' : ''} processed`);
+}
+
+function saveBatch() {
+  if (!pendingBatch.length) return;
+  dataset = [...dataset, ...pendingBatch];
+  pendingBatch = [];
+  save();
+  updateStats();
+  document.getElementById('pendingBanner').classList.remove('visible');
+  render();
+  toast('Batch saved', 'ok');
+}
+
+// ── SENTIMENT ─────────────────────────────────────
+function setSentiment(id, sentiment, isPending) {
+  const list = isPending ? pendingBatch : dataset;
+  const entry = list.find(e => e.id === id);
+  if (!entry) return;
+  entry.sentiment = sentiment;
+  entry.labeled   = true;
+  if (!isPending) save();
+  updateStats();
+
+  const card = document.querySelector(`[data-id="${id}"]`);
+  if (card) {
+    card.classList.remove('sent-positive','sent-negative','sent-neutral','unlabeled');
+    card.classList.add(`sent-${sentiment}`);
+    card.querySelectorAll('.sbtn').forEach(btn => {
+      btn.classList.remove('active-positive','active-negative','active-neutral','just-selected');
+      if (btn.dataset.sent === sentiment) {
+        btn.classList.add(`active-${sentiment}`, 'just-selected');
+        setTimeout(() => btn.classList.remove('just-selected'), 200);
+      }
+    });
+    // remove unlabeled chip if present
+    const uchip = card.querySelector('.unlabeled-chip');
+    if (uchip) uchip.remove();
+  }
+  updateUnlabeledBanner();
+}
+
+// ── DELETE ENTRY ──────────────────────────────────
+function deleteCollectEntry(id) {
+  const el = document.querySelector(`#entriesList .entry[data-id="${id}"]`);
+  const doDelete = () => {
+    const inPending = pendingBatch.some(e => e.id === id);
+    if (inPending) {
+      pendingBatch = pendingBatch.filter(e => e.id !== id);
+      if (!pendingBatch.length) {
+        document.getElementById('pendingBanner').classList.remove('visible');
+      } else {
+        document.getElementById('pendingText').textContent =
+          `${pendingBatch.length} new entries — label sentiments then save`;
+      }
+    } else {
+      dataset = dataset.filter(e => e.id !== id);
+      save();
+    }
+    updateStats();
+    render();
+    toast('Entry deleted');
+  };
+  if (el) {
+    el.classList.add('deleting');
+    el.addEventListener('animationend', doDelete, { once: true });
+  } else {
+    doDelete();
+  }
+}
+
+function deleteReviewEntry(id) {
+  const el = document.querySelector(`#reviewEntries .review-entry[data-id="${id}"]`);
+  const doDelete = () => {
+    reviewData = reviewData.filter(e => e.id !== id);
+    delete reviewEdits[id];
+    updateReviewChangesBar();
+    updateReviewStats();
+    applyReviewFilters();
+    toast('Entry deleted');
+  };
+  if (el) {
+    el.classList.add('deleting');
+    el.addEventListener('animationend', doDelete, { once: true });
+  } else {
+    doDelete();
+  }
+}
+
+function addRipple(btn, e) {
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const x    = e.clientX - rect.left - size / 2;
+  const y    = e.clientY - rect.top  - size / 2;
+  const col  = btn.dataset.sent === 'positive' ? 'rgba(74,222,128,0.4)'
+             : btn.dataset.sent === 'negative' ? 'rgba(248,113,113,0.4)'
+             : 'rgba(148,163,184,0.4)';
+  const r    = document.createElement('span');
+  r.className = 'ripple';
+  r.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px;background:${col};`;
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 380);
+}
+
+// ── RENDER ────────────────────────────────────────
+function render() {
+  const list = document.getElementById('entriesList');
+  const pagBar = document.getElementById('paginationBar');
+  let all = [...pendingBatch, ...dataset].reverse();
+
+  if (filter === 'taglish')        all = all.filter(e => e.language_type === 'taglish');
+  else if (filter === 'unlabeled') all = all.filter(e => !e.labeled || e.sentiment === null);
+  else if (filter !== 'all')       all = all.filter(e => e.sentiment === filter);
+
+  const total = pendingBatch.length + dataset.length;
+  document.getElementById('entryCount').textContent = `${total} entr${total !== 1 ? 'ies' : 'y'}`;
+
+  if (!all.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-glyph">⌗</div>
+        <div class="empty-title">${filter === 'unlabeled' ? 'No unlabeled entries' : 'No entries'}</div>
+        <div class="empty-sub">${filter === 'all' ? 'Paste posts and click Process Batch' : 'Nothing matching this filter'}</div>
+      </div>`;
+    pagBar.style.display = 'none';
+    return;
+  }
+
+  // Clamp currentPage
+  const totalPages = Math.ceil(all.length / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = all.slice(start, start + PAGE_SIZE);
+
+  list.innerHTML = pageItems.map(entry => {
+    const isPending = pendingBatch.some(e => e.id === entry.id);
+    const s = entry.sentiment;
+    const cardClass = (!entry.labeled || s === null)
+      ? 'unlabeled'
+      : `sent-${s}`;
+
+    return `
+    <div class="entry ${cardClass}" data-id="${entry.id}">
+      <div>
+        <div class="entry-text">${escHtml(entry.text)}</div>
+        <div class="entry-meta">
+          <span class="chip ${entry.language_type}">${entry.language_type}</span>
+          <span class="chip">${entry.source}</span>
+          ${entry.has_emoji ? `<span class="chip emoji">emoji ×${entry.emoji_count}</span>` : ''}
+          ${isPending ? `<span class="chip unsaved">unsaved</span>` : ''}
+          ${(!entry.labeled || s === null) ? `<span class="chip unlabeled-chip">unlabeled</span>` : ''}
+        </div>
+      </div>
+      <div class="entry-controls">
+        <div class="sent-btns">
+          <button class="sbtn ${s==='positive'?'active-positive':''}" data-sent="positive"
+            onclick="addRipple(this,event);setSentiment(${entry.id},'positive',${isPending})">POS</button>
+          <button class="sbtn ${s==='negative'?'active-negative':''}" data-sent="negative"
+            onclick="addRipple(this,event);setSentiment(${entry.id},'negative',${isPending})">NEG</button>
+          <button class="sbtn ${s==='neutral'?'active-neutral':''}" data-sent="neutral"
+            onclick="addRipple(this,event);setSentiment(${entry.id},'neutral',${isPending})">NEU</button>
+        </div>
+        <div class="entry-id">#${entry.id}</div>
+      </div>
+      <button class="del-btn" title="Delete entry" onclick="deleteCollectEntry(${entry.id})">✕</button>
+    </div>`;
+  }).join('');
+
+  // Render pagination
+  if (totalPages > 1) {
+    pagBar.style.display = 'flex';
+    pagBar.innerHTML = buildPagination(currentPage, totalPages, 'goToPage');
+    // Page info
+    const infoEl = document.createElement('span');
+    infoEl.className = 'page-info';
+    infoEl.textContent = `${start+1}–${Math.min(start+PAGE_SIZE, all.length)} of ${all.length}`;
+    pagBar.appendChild(infoEl);
+  } else {
+    pagBar.style.display = 'none';
+  }
+}
+
+function goToPage(p) {
+  currentPage = p;
+  render();
+  document.getElementById('entriesList').scrollTop = 0;
+}
+
+function buildPagination(current, total, fnName) {
+  let html = '';
+  html += `<button class="page-btn" onclick="${fnName}(${current-1})" ${current===1?'disabled':''}>‹ PREV</button>`;
+
+  const pages = paginationRange(current, total);
+  pages.forEach(p => {
+    if (p === '…') {
+      html += `<span class="page-ellipsis">…</span>`;
+    } else {
+      html += `<button class="page-btn ${p===current?'active':''}" onclick="${fnName}(${p})">${p}</button>`;
+    }
+  });
+
+  html += `<button class="page-btn" onclick="${fnName}(${current+1})" ${current===total?'disabled':''}>NEXT ›</button>`;
+  return html;
+}
+
+function paginationRange(current, total) {
+  if (total <= 7) return Array.from({length: total}, (_,i) => i+1);
+  const pages = [];
+  pages.push(1);
+  if (current > 3) pages.push('…');
+  for (let i = Math.max(2, current-1); i <= Math.min(total-1, current+1); i++) pages.push(i);
+  if (current < total - 2) pages.push('…');
+  pages.push(total);
+  return pages;
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── STATS ─────────────────────────────────────────
+function updateStats() {
+  const all      = [...dataset, ...pendingBatch];
+  const saved    = dataset.length;
+  const pos      = all.filter(e => e.sentiment === 'positive').length;
+  const neg      = all.filter(e => e.sentiment === 'negative').length;
+  const neu      = all.filter(e => e.sentiment === 'neutral').length;
+  const unlabeled = all.filter(e => !e.labeled || e.sentiment === null).length;
+  const pct      = Math.min(100, Math.round((saved / 5000) * 100));
+
+  document.getElementById('statTotal').textContent    = saved;
+  document.getElementById('statPos').textContent      = `P: ${pos}`;
+  document.getElementById('statNeg').textContent      = `N: ${neg}`;
+  document.getElementById('statNeu').textContent      = `U: ${neu}`;
+  document.getElementById('statUnl').textContent = `⚠ ${unlabeled}`;
+  document.getElementById('progFill').style.width     = pct + '%';
+  document.getElementById('progPct').textContent      = pct + '%';
+
+  updateUnlabeledBanner();
+}
+
+function updateUnlabeledBanner() {
+  const banner = document.getElementById('unlabeledBanner');
+  if (!banner) return;
+  const all = [...dataset, ...pendingBatch];
+  const n   = all.filter(e => !e.labeled || e.sentiment === null).length;
+  if (n > 0) {
+    banner.classList.add('visible');
+    document.getElementById('unlabeledText').textContent =
+      `${n} entr${n !== 1 ? 'ies' : 'y'} not yet labeled`;
+  } else {
+    banner.classList.remove('visible');
+  }
+}
+
+// ── FILTER ────────────────────────────────────────
+function setFilter(f, el) {
+  filter = f;
+  currentPage = 1;
+  document.querySelectorAll('#collectPanel .filter-tabs .ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// ── EXPORT ────────────────────────────────────────
+function exportJSON() {
+  if (!dataset.length) { toast('No saved data to export', 'warn'); return; }
+
+  const unlabeled = dataset.filter(e => !e.labeled || e.sentiment === null).length;
+
+  if (unlabeled > 0) {
+    showModal(
+      'Unlabeled Entries Detected',
+      `<strong>${unlabeled}</strong> entr${unlabeled !== 1 ? 'ies' : 'y'} have not been labeled. These will export with <strong>sentiment: null</strong> and should be reviewed before fine-tuning.<br><br>Export anyway?`,
+      [
+        { label: 'EXPORT ANYWAY', cls: 'btn btn-sm btn-warn', fn: () => { closeModal(); doExportJSON(); } },
+        { label: 'CANCEL', cls: 'btn btn-sm', fn: closeModal }
+      ]
+    );
+  } else {
+    doExportJSON();
+  }
+}
+
+function doExportJSON() {
+  const blob = new Blob([JSON.stringify(dataset, null, 2)], { type: 'text/plain' });
+  dl(blob, `tagcol_${ts()}.json`);
+  toast(`Exported ${dataset.length} entries`, 'ok');
+}
+
+// ── MERGE ─────────────────────────────────────────
+function handleMerge(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+
+  const readers = files.map(file => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => {
+      try {
+        const text = e.target.result.trim();
+        let data;
+        if (text.startsWith('[')) {
+          data = JSON.parse(text);
+          if (!Array.isArray(data)) throw new Error();
+        } else {
+          data = text.split('\n')
+            .map(l => l.trim()).filter(l => l)
+            .map(l => JSON.parse(l));
+        }
+        res({ name: file.name, data });
+      } catch { rej({ name: file.name }); }
+    };
+    r.onerror = () => rej({ name: file.name });
+    r.readAsText(file);
+  }));
+
+  Promise.allSettled(readers).then(results => {
+    let all = [], loaded = [], failed = [];
+    results.forEach(r => {
+      if (r.status === 'fulfilled') { all = [...all, ...r.value.data]; loaded.push(r.value.name); }
+      else failed.push(r.reason.name);
+    });
+
+    const seen = new Set();
+    const deduped = all.filter(e => {
+      const k = (e.text || '').trim().toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+
+    mergedData = deduped.map((e, i) => ({ ...e, id: i + 1 }));
+
+    const dupes = all.length - mergedData.length;
+    let msg = '';
+    if (loaded.length) {
+      msg += `Files   : ${loaded.join(', ')}\n`;
+      msg += `Raw     : ${all.length}  |  Dupes removed: ${dupes}\n`;
+      msg += `Merged  : ${mergedData.length} entries`;
+    }
+    if (failed.length) msg += `\nFailed  : ${failed.join(', ')}`;
+
+    document.getElementById('mergeStatus').textContent = msg;
+    document.getElementById('exportMergeBtn').style.display = mergedData.length ? 'block' : 'none';
+    event.target.value = '';
+    toast(`Merge: ${mergedData.length} entries`, 'ok');
+  });
+}
+
+function exportMerged() {
+  if (!mergedData.length) { toast('No merged data', 'warn'); return; }
+  const blob = new Blob([JSON.stringify(mergedData, null, 2)], { type: 'text/plain' });
+  dl(blob, `tagcol_MERGED_${ts()}.json`);
+  toast(`Exported ${mergedData.length} merged entries`, 'ok');
+}
+
+// ── CLEAR ─────────────────────────────────────────
+function confirmClear() {
+  showModal(
+    'Clear All Data',
+    'This will <strong>permanently delete</strong> all saved entries from this browser. This cannot be undone.',
+    [
+      { label: 'CLEAR ALL', cls: 'btn btn-sm btn-danger', fn: () => { closeModal(); doClear(); } },
+      { label: 'CANCEL', cls: 'btn btn-sm', fn: closeModal }
+    ]
+  );
+}
+
+function doClear() {
+  dataset = []; pendingBatch = []; nextId = 1;
+  localStorage.removeItem('tagcol_v2');
+  updateStats(); render();
+  document.getElementById('pendingBanner').classList.remove('visible');
+  toast('Dataset cleared');
+}
+
+// ── MODAL ─────────────────────────────────────────
+function showModal(title, body, actions) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML    = body;
+  const actEl = document.getElementById('modalActions');
+  actEl.innerHTML = '';
+  actions.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className   = a.cls;
+    btn.textContent = a.label;
+    btn.onclick     = a.fn;
+    actEl.appendChild(btn);
+  });
+  document.getElementById('modalOverlay').classList.add('visible');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('visible');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// ── UTILS ─────────────────────────────────────────
+function updateLineHint() {
+  const v = document.getElementById('inputArea').value;
+  const n = v.split('\n').filter(l => l.trim()).length;
+  document.getElementById('lineHint').textContent =
+    n === 0 ? '0 lines detected' : `${n} line${n !== 1 ? 's' : ''} detected`;
+}
+
+document.getElementById('inputArea').addEventListener('input', updateLineHint);
+
+let toastTimer;
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ` toast-${type}` : '');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function dl(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function ts() { return new Date().toISOString().slice(0,10); }
+
+// ── JSON PREVIEW ──────────────────────────────────
+let previewData     = [];
+let previewFiltered = [];
+let previewPage     = 1;
+let previewFilter   = 'all';
+let previewQuery    = '';
+const PREVIEW_PAGE_SIZE = 100;
+
+function handlePreviewFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const text = e.target.result.trim();
+      let data;
+      if (text.startsWith('[')) {
+        data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error('Not an array');
+      } else {
+        data = text.split('\n').map(l => l.trim()).filter(l => l).map(l => JSON.parse(l));
+      }
+      previewData = data;
+      previewFilter = 'all';
+      previewQuery  = '';
+      previewPage   = 1;
+      document.getElementById('previewSearch').value = '';
+      document.querySelectorAll('.preview-ftab').forEach((t,i) => t.classList.toggle('active', i === 0));
+      document.getElementById('previewFilename').textContent = file.name;
+      openPreview();
+    } catch(err) {
+      toast('Invalid JSON / JSONL file', 'warn');
+    }
+    event.target.value = '';
+  };
+  r.onerror = () => { toast('Failed to read file', 'warn'); event.target.value = ''; };
+  r.readAsText(file);
+}
+
+function openPreview() {
+  applyPreviewFilters();
+  document.getElementById('previewOverlay').classList.add('visible');
+}
+
+function closePreview() {
+  document.getElementById('previewOverlay').classList.remove('visible');
+}
+
+document.getElementById('previewOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('previewOverlay')) closePreview();
+});
+
+function setPreviewFilter(f, el) {
+  previewFilter = f;
+  previewPage = 1;
+  document.querySelectorAll('.preview-ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  applyPreviewFilters();
+}
+
+function onPreviewSearch() {
+  previewQuery = document.getElementById('previewSearch').value.toLowerCase();
+  previewPage = 1;
+  applyPreviewFilters();
+}
+
+function applyPreviewFilters() {
+  let data = [...previewData];
+
+  if (previewFilter === 'null') {
+    data = data.filter(e => e.sentiment === null || e.sentiment === undefined || e.labeled === false);
+  } else if (previewFilter === 'taglish') {
+    data = data.filter(e => e.language_type === 'taglish');
+  } else if (previewFilter !== 'all') {
+    data = data.filter(e => e.sentiment === previewFilter);
+  }
+
+  if (previewQuery) {
+    data = data.filter(e => (e.text || '').toLowerCase().includes(previewQuery));
+  }
+
+  previewFiltered = data;
+
+  // Stats from full previewData
+  const pos  = previewData.filter(e => e.sentiment === 'positive').length;
+  const neg  = previewData.filter(e => e.sentiment === 'negative').length;
+  const neu  = previewData.filter(e => e.sentiment === 'neutral').length;
+  const unl  = previewData.filter(e => !e.sentiment || e.labeled === false).length;
+  document.getElementById('previewStats').innerHTML = `
+    <span class="preview-stat">total <span>${previewData.length.toLocaleString()}</span></span>
+    <span class="preview-stat" style="color:var(--pos)">pos <span>${pos.toLocaleString()}</span></span>
+    <span class="preview-stat" style="color:var(--neg)">neg <span>${neg.toLocaleString()}</span></span>
+    <span class="preview-stat" style="color:var(--neu)">neu <span>${neu.toLocaleString()}</span></span>
+    <span class="preview-stat" style="color:var(--warn)">unl <span>${unl.toLocaleString()}</span></span>
+  `;
+
+  renderPreviewTable();
+}
+
+function renderPreviewTable() {
+  const tbody  = document.getElementById('previewTableBody');
+  const emptyEl = document.getElementById('previewEmpty');
+  const pagEl  = document.getElementById('previewPagination');
+
+  if (!previewFiltered.length) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'flex';
+    pagEl.innerHTML = '';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+
+  const totalPages = Math.ceil(previewFiltered.length / PREVIEW_PAGE_SIZE);
+  if (previewPage > totalPages) previewPage = totalPages;
+  if (previewPage < 1) previewPage = 1;
+
+  const start = (previewPage - 1) * PREVIEW_PAGE_SIZE;
+  const items = previewFiltered.slice(start, start + PREVIEW_PAGE_SIZE);
+
+  tbody.innerHTML = items.map((e, idx) => {
+    const s = e.sentiment;
+    const sentHtml = s
+      ? `<span class="sent-pill ${s}">${s.toUpperCase()}</span>`
+      : `<span class="sent-pill null-pill">UNLABELED</span>`;
+    const lang = e.language_type || 'other';
+    const langHtml = `<span class="lang-pill ${lang}">${lang}</span>`;
+    const labeledHtml = e.labeled
+      ? `<span style="font-family:var(--mono);font-size:9px;color:var(--pos)">✓ TRUE</span>`
+      : `<span style="font-family:var(--mono);font-size:9px;color:var(--warn)">✗ FALSE</span>`;
+    const hasEmojiHtml = e.has_emoji
+      ? `<span style="font-family:var(--mono);font-size:9px;color:var(--pos)">✓ TRUE</span>`
+      : `<span style="font-family:var(--mono);font-size:9px;color:var(--dim)">FALSE</span>`;
+    const emojiCount = (e.emoji_count !== undefined && e.emoji_count !== null)
+      ? `<span style="font-family:var(--mono);font-size:11px;color:${e.emoji_count > 0 ? 'var(--dim)' : 'var(--border3)'}">${e.emoji_count}</span>`
+      : `<span style="font-family:var(--mono);font-size:11px;color:var(--border3)">0</span>`;
+    const csDensity = (e.code_switch_density !== '' && e.code_switch_density !== undefined && e.code_switch_density !== null)
+      ? `<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${escHtml(String(e.code_switch_density))}</span>`
+      : `<span style="font-family:var(--mono);font-size:10px;color:var(--border3)">—</span>`;
+    const densityRange = (e.density_range !== '' && e.density_range !== undefined && e.density_range !== null)
+      ? `<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${escHtml(String(e.density_range))}</span>`
+      : `<span style="font-family:var(--mono);font-size:10px;color:var(--border3)">—</span>`;
+    return `
+      <tr>
+        <td class="id-cell">${e.id !== undefined ? e.id : start + idx + 1}</td>
+        <td class="text-cell">${escHtml(e.text || '')}</td>
+        <td class="mono-cell">${sentHtml}</td>
+        <td class="mono-cell">${labeledHtml}</td>
+        <td class="mono-cell">${langHtml}</td>
+        <td class="mono-cell">${csDensity}</td>
+        <td class="mono-cell">${densityRange}</td>
+        <td class="mono-cell" style="font-size:10px;color:var(--dim)">${escHtml(e.source || '—')}</td>
+        <td class="mono-cell">${hasEmojiHtml}</td>
+        <td class="mono-cell" style="text-align:center">${emojiCount}</td>
+      </tr>`;
+  }).join('');
+
+  // Render preview pagination
+  if (totalPages > 1) {
+    let html = buildPagination(previewPage, totalPages, 'goToPreviewPage');
+    const infoSpan = `<span class="page-info">${start+1}–${Math.min(start+PREVIEW_PAGE_SIZE, previewFiltered.length)} of ${previewFiltered.length.toLocaleString()}</span>`;
+    pagEl.innerHTML = html + infoSpan;
+  } else {
+    pagEl.innerHTML = `<span class="page-info">${previewFiltered.length.toLocaleString()} entr${previewFiltered.length !== 1 ? 'ies' : 'y'}</span>`;
+  }
+}
+
+function goToPreviewPage(p) {
+  previewPage = p;
+  renderPreviewTable();
+  document.querySelector('.preview-body').scrollTop = 0;
+}
+
+
+// ── MODE SWITCHING ────────────────────────────────
+function setMode(mode) {
+  document.getElementById('modeCollect').classList.toggle('active', mode === 'collect');
+  document.getElementById('modeReview').classList.toggle('active', mode === 'review');
+  document.getElementById('modeReader').classList.toggle('active', mode === 'reader');
+  document.getElementById('collectPanel').classList.toggle('hidden', mode !== 'collect');
+  document.getElementById('reviewPanel').classList.toggle('hidden', mode !== 'review');
+  document.getElementById('readerPanel').classList.toggle('hidden', mode !== 'reader');
+}
+
+// ── REVIEW STATE ──────────────────────────────────
+let reviewData     = [];      // original loaded data (never mutated)
+let reviewEdits    = {};      // id -> {sentiment?, language_type?} — only changes
+let reviewFiltered = [];
+let reviewFilter   = 'all';
+let reviewQuery    = '';
+let reviewPage     = 1;
+const REVIEW_PAGE_SIZE = 50;
+
+function handleReviewLoad(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const text = e.target.result.trim();
+      let data;
+      if (text.startsWith('[')) {
+        data = JSON.parse(text);
+      } else {
+        data = text.split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
+      }
+      reviewData  = data;
+      reviewEdits = {};
+      reviewFilter = 'all';
+      reviewQuery  = '';
+      reviewPage   = 1;
+      document.getElementById('reviewSearch').value = '';
+      document.querySelectorAll('#reviewPanel .filter-tabs .ftab').forEach((t,i) => t.classList.toggle('active', i === 0));
+      // export btn always visible in sidebar
+      updateReviewChangesBar();
+      updateReviewStats();
+      applyReviewFilters();
+      toast('Loaded ' + data.length + ' entries for review', 'ok');
+    } catch(err) {
+      toast('Invalid JSON / JSONL file', 'warn');
+    }
+    event.target.value = '';
+  };
+  r.readAsText(file);
+}
+
+function getReviewEntry(e) {
+
+  // Merge original with any edits
+  const edits = reviewEdits[e.id] || {};
+  return Object.assign({}, e, edits);
+}
+
+function setReviewSentiment(id, sentiment) {
+  if (!reviewEdits[id]) reviewEdits[id] = {};
+  const orig = reviewData.find(e => e.id === id);
+  // If same as original, remove the edit
+  if (orig && orig.sentiment === sentiment && !('language_type' in (reviewEdits[id] || {}))) {
+    delete reviewEdits[id];
+  } else {
+    reviewEdits[id].sentiment = sentiment;
+    reviewEdits[id].labeled   = true;
+  }
+  updateReviewChangesBar();
+  updateReviewStats();
+  rerenderReviewRow(id);
+}
+
+function cycleReviewLang(id) {
+  const cycle = ['taglish', 'tagalog', 'english'];
+  const entry = getReviewEntry(reviewData.find(e => e.id === id));
+  const cur   = entry.language_type || 'taglish';
+  const next  = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
+  if (!reviewEdits[id]) reviewEdits[id] = {};
+  const orig = reviewData.find(e => e.id === id);
+  reviewEdits[id].language_type = next;
+  // Clean up if nothing changed from original
+  if (orig && orig.language_type === next && !('sentiment' in (reviewEdits[id] || {}))) {
+    delete reviewEdits[id];
+  }
+  updateReviewChangesBar();
+  updateReviewStats();
+  rerenderReviewRow(id);
+}
+
+function rerenderReviewRow(id) {
+  const row = document.querySelector(`.review-entry[data-id="${id}"]`);
+  if (!row) return;
+  const orig  = reviewData.find(e => e.id === id);
+  const entry = getReviewEntry(orig);
+  const isModified = !!reviewEdits[id];
+  const s = entry.sentiment;
+
+  row.className = 'review-entry' +
+    (s === 'positive' ? ' sent-positive' :
+     s === 'negative' ? ' sent-negative' :
+     s === 'neutral'  ? ' sent-neutral'  :
+     ' sent-unlabeled') +
+    (isModified ? ' modified' : '');
+
+  // Update lang pill
+  const langBtn = row.querySelector('.lang-btn');
+  if (langBtn) {
+    langBtn.className = 'lang-btn ' + (entry.language_type || 'taglish');
+    langBtn.textContent = (entry.language_type || 'taglish') + (isModified && reviewEdits[id]?.language_type ? ' ✎' : '');
+  }
+
+  // Update sentiment buttons
+  row.querySelectorAll('.sbtn').forEach(btn => {
+    btn.classList.remove('active-positive','active-negative','active-neutral');
+    if (btn.dataset.sent === s) btn.classList.add('active-' + s);
+  });
+
+  // Update sentiment pill if present
+  const sentPill = row.querySelector('.sent-pill');
+  if (sentPill) {
+    sentPill.className = 'sent-pill ' + (s || 'null');
+    sentPill.textContent = s ? s.toUpperCase() : 'UNLABELED';
+  }
+}
+
+function updateReviewChangesBar() {
+  const n = Object.keys(reviewEdits).length;
+  const bar = document.getElementById('revChangesBanner');
+  const badge = document.getElementById('revBadge');
+  if (n > 0) {
+    bar.classList.add('visible');
+    document.getElementById('revChangesText').textContent = n + ' modification' + (n !== 1 ? 's' : '') + ' — not yet exported';
+    badge.style.display = 'inline-block';
+    badge.textContent = n;
+  } else {
+    bar.classList.remove('visible');
+    badge.style.display = 'none';
+  }
+}
+
+function resetReviewChanges() {
+  if (!Object.keys(reviewEdits).length) return;
+  showModal(
+    'Reset All Changes',
+    'This will undo all ' + Object.keys(reviewEdits).length + ' modifications made in this review session.',
+    [
+      { label: 'RESET', cls: 'btn btn-sm btn-danger', fn: () => { closeModal(); reviewEdits = {}; updateReviewChangesBar(); updateReviewStats(); applyReviewFilters(); } },
+      { label: 'CANCEL', cls: 'btn btn-sm', fn: closeModal }
+    ]
+  );
+}
+
+function exportReview() {
+  if (!reviewData.length) { toast('No review data to export', 'warn'); return; }
+  const out = reviewData.map(e => {
+    const edits = reviewEdits[e.id];
+    return edits ? Object.assign({}, e, edits) : e;
+  });
+  const n = Object.keys(reviewEdits).length;
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'text/plain' });
+  dl(blob, 'tagcol_reviewed_' + ts() + '.json');
+  toast('Exported ' + out.length + ' entries (' + n + ' corrected)', 'ok');
+}
+
+function setRevFilter(f, el) {
+  reviewFilter = f;
+  reviewPage   = 1;
+  document.querySelectorAll('#reviewPanel .filter-tabs .ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  applyReviewFilters();
+}
+
+function matchDensityRange(e, a, b) {
+  const r = (e.density_range || '').replace('–','-').replace('—','-');
+  return r === (a + '-' + b + '%');
+}
+
+function onReviewSearch() {
+  reviewQuery = document.getElementById('reviewSearch').value.toLowerCase();
+  reviewPage  = 1;
+  applyReviewFilters();
+}
+
+function applyReviewFilters() {
+  let data = reviewData.map(e => getReviewEntry(e));
+
+  if      (reviewFilter === 'positive')  data = data.filter(e => e.sentiment === 'positive');
+  else if (reviewFilter === 'negative')  data = data.filter(e => e.sentiment === 'negative');
+  else if (reviewFilter === 'neutral')   data = data.filter(e => e.sentiment === 'neutral');
+  else if (reviewFilter === 'unlabeled') data = data.filter(e => !e.sentiment || e.labeled === false);
+  else if (reviewFilter === 'taglish')   data = data.filter(e => e.language_type === 'taglish');
+  else if (reviewFilter === 'modified')  data = data.filter(e => !!reviewEdits[e.id]);
+  else if (reviewFilter === 'd0')        data = data.filter(e => matchDensityRange(e,'0','20'));
+  else if (reviewFilter === 'd1')        data = data.filter(e => matchDensityRange(e,'21','40'));
+  else if (reviewFilter === 'd2')        data = data.filter(e => matchDensityRange(e,'41','60'));
+  else if (reviewFilter === 'd3')        data = data.filter(e => matchDensityRange(e,'61','80'));
+  else if (reviewFilter === 'd4')        data = data.filter(e => matchDensityRange(e,'81','100'));
+
+  if (reviewQuery) data = data.filter(e =>
+    (e.text || '').toLowerCase().includes(reviewQuery) ||
+    String(e.id).includes(reviewQuery) ||
+    (e.source || '').toLowerCase().includes(reviewQuery)
+  );
+
+  reviewFiltered = data;
+
+  // Update entry count to reflect filtered total
+  const countEl = document.getElementById('reviewCount');
+  if (countEl) {
+    const total = reviewData.length;
+    if (data.length === total) {
+      countEl.textContent = total + ' entr' + (total !== 1 ? 'ies' : 'y');
+    } else {
+      countEl.textContent = data.length + ' of ' + total + ' entries';
+    }
+  }
+
+  renderReview();
+}
+
+function renderReview() {
+  const container = document.getElementById('reviewEntries');
+  const empty     = document.getElementById('reviewEmpty');
+  const pagBar    = document.getElementById('reviewPagBar');
+
+  if (!reviewData.length) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    empty.style.display = 'flex';
+    pagBar.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  container.style.display = '';
+
+  if (!reviewFiltered.length) {
+    container.innerHTML = '<div class="review-empty" style="height:200px"><div>No matching entries</div></div>';
+    pagBar.style.display = 'none';
+    return;
+  }
+
+  const totalPages = Math.ceil(reviewFiltered.length / REVIEW_PAGE_SIZE);
+  if (reviewPage > totalPages) reviewPage = totalPages;
+  if (reviewPage < 1) reviewPage = 1;
+
+  const start = (reviewPage - 1) * REVIEW_PAGE_SIZE;
+  const items = reviewFiltered.slice(start, start + REVIEW_PAGE_SIZE);
+
+  container.innerHTML = items.map(entry => {
+    const isModified = !!reviewEdits[entry.id];
+    const s   = entry.sentiment;
+    const lang = entry.language_type || 'taglish';
+    const cardClass = 'review-entry' +
+      (s === 'positive' ? ' sent-positive' :
+       s === 'negative' ? ' sent-negative' :
+       s === 'neutral'  ? ' sent-neutral'  : ' sent-unlabeled') +
+      (isModified ? ' modified' : '');
+
+    const hasDensity = entry.code_switch_density !== '' && entry.code_switch_density !== undefined && entry.code_switch_density !== null;
+    const densityHtml = hasDensity
+      ? `<span class="density-info"><span style="color:var(--text)">${entry.code_switch_density}</span><span style="color:var(--dim);margin-left:3px">${entry.density_range || ''}</span></span>`
+      : '';
+
+    const modDot = isModified ? '<span class="modified-dot" title="Modified"></span>' : '';
+
+    return `<div class="${cardClass}" data-id="${entry.id}">
+      <div class="review-id">#${entry.id}</div>
+      <div>
+        <div class="review-text">${escHtml(entry.text || '')}</div>
+        <div class="review-meta">
+          <button class="lang-btn ${lang}" onclick="cycleReviewLang(${entry.id})" title="Click to cycle language type">
+            ${lang}${isModified && reviewEdits[entry.id]?.language_type ? ' ✎' : ''}
+          </button>
+          ${densityHtml}
+          <span class="chip">${escHtml(entry.source || '—')}</span>
+          ${entry.has_emoji ? '<span class="chip emoji">emoji ×' + entry.emoji_count + '</span>' : ''}
+          ${modDot}
+        </div>
+      </div>
+      <div class="review-controls">
+        <div class="sent-btns">
+          <button class="sbtn ${s==='positive'?'active-positive':''}" data-sent="positive"
+            onclick="addRipple(this,event);setReviewSentiment(${entry.id},'positive')">POS</button>
+          <button class="sbtn ${s==='negative'?'active-negative':''}" data-sent="negative"
+            onclick="addRipple(this,event);setReviewSentiment(${entry.id},'negative')">NEG</button>
+          <button class="sbtn ${s==='neutral'?'active-neutral':''}" data-sent="neutral"
+            onclick="addRipple(this,event);setReviewSentiment(${entry.id},'neutral')">NEU</button>
+        </div>
+      </div>
+      <button class="del-btn" title="Delete entry" onclick="deleteReviewEntry(${entry.id})">✕</button>
+    </div>`;
+  }).join('');
+
+  // Pagination
+  if (totalPages > 1) {
+    pagBar.style.display = 'flex';
+    let html = buildPagination(reviewPage, totalPages, 'goToRevPage');
+    const infoSpan = '<span class="page-info">' + (start+1) + '–' + Math.min(start+REVIEW_PAGE_SIZE, reviewFiltered.length) + ' of ' + reviewFiltered.length + '</span>';
+    pagBar.innerHTML = html + infoSpan;
+  } else {
+    pagBar.style.display = 'none';
+    pagBar.innerHTML = '';
+  }
+}
+
+function goToRevPage(p) {
+  reviewPage = p;
+  renderReview();
+  document.getElementById('reviewEntries').scrollTop = 0;
+}
+
+
+
+// ── REVIEW STATS ──────────────────────────────────
+function updateReviewStats() {
+  const countEl = document.getElementById('reviewCount');
+  if (!reviewData.length) {
+    if (countEl) countEl.textContent = '0 entries';
+    return;
+  }
+  const data = reviewData.map(e => getReviewEntry(e));
+
+  // Sentiment
+  document.getElementById('rstPos').textContent    = data.filter(e => e.sentiment === 'positive').length;
+  document.getElementById('rstNeg').textContent    = data.filter(e => e.sentiment === 'negative').length;
+  document.getElementById('rstNeu').textContent    = data.filter(e => e.sentiment === 'neutral').length;
+  document.getElementById('rstUnl').textContent    = data.filter(e => !e.sentiment || e.labeled === false).length;
+
+  // Language type
+  document.getElementById('rstTgl').textContent = data.filter(e => e.language_type === 'taglish').length;
+  document.getElementById('rstTga').textContent = data.filter(e => e.language_type === 'tagalog').length;
+  document.getElementById('rstEng').textContent = data.filter(e => e.language_type === 'english').length;
+  document.getElementById('rstOth').textContent   = data.filter(e => !e.language_type || e.language_type === 'other').length;
+
+  // Density ranges — match both hyphen and en-dash variants from different sources
+  function matchDensity(e, a, b) {
+    const r = (e.density_range || '').replace('–','-').replace('—','-');
+    return r === (a + '-' + b + '%');
+  }
+  document.getElementById('rstD0').textContent = data.filter(e => matchDensity(e,'0','20')).length;
+  document.getElementById('rstD1').textContent = data.filter(e => matchDensity(e,'21','40')).length;
+  document.getElementById('rstD2').textContent = data.filter(e => matchDensity(e,'41','60')).length;
+  document.getElementById('rstD3').textContent = data.filter(e => matchDensity(e,'61','80')).length;
+  document.getElementById('rstD4').textContent = data.filter(e => matchDensity(e,'81','100')).length;
+
+  // Entry count
+  if (countEl) countEl.textContent = data.length + ' entr' + (data.length !== 1 ? 'ies' : 'y');
+}
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────
+// State: which entry is the "cursor" (index into visible list)
+let kbCollectIdx = -1;   // index in current collect visible list
+let kbReviewIdx  = -1;   // index in current review visible list
+
+// Give focus to a main-area panel on click (mousedown so it fires before blur)
+['collectMain','reviewMain'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('mousedown', () => {
+    // Only grab focus if not clicking an interactive element
+    // (focus will be set naturally for buttons/inputs; we want the panel itself)
+  });
+  el.addEventListener('click', e => {
+    // Don't steal focus if clicking a button/input/select
+    if (['BUTTON','INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+    el.focus();
+  });
+  // On the entries list itself, focus the main area when clicked
+  const entriesId = id === 'collectMain' ? 'entriesList' : 'reviewEntries';
+  document.getElementById(entriesId)?.addEventListener('mousedown', e => {
+    if (['BUTTON','INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+    el.focus();
+  });
+});
+
+// When any .sbtn or sentiment button is clicked, re-focus the panel
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('sbtn')) {
+    const panel = e.target.closest('#collectMain') || e.target.closest('#reviewMain');
+    if (panel) setTimeout(() => panel.focus(), 0);
+  }
+});
+
+// Track focus/blur to add .kb-focused and update cursor
+document.getElementById('collectMain').addEventListener('focus', () => {
+  document.getElementById('collectMain').classList.add('kb-focused');
+  document.getElementById('reviewMain').classList.remove('kb-focused');
+  if (kbCollectIdx < 0) kbCollectIdx = 0;
+  highlightKbEntry('collect');
+});
+document.getElementById('collectMain').addEventListener('blur', e => {
+  // Keep focused state if focus moved to a child (e.g. a button inside)
+  if (document.getElementById('collectMain').contains(e.relatedTarget)) return;
+  document.getElementById('collectMain').classList.remove('kb-focused');
+  clearKbHighlight('collect');
+});
+
+document.getElementById('reviewMain').addEventListener('focus', () => {
+  document.getElementById('reviewMain').classList.add('kb-focused');
+  document.getElementById('collectMain').classList.remove('kb-focused');
+  if (kbReviewIdx < 0) kbReviewIdx = 0;
+  highlightKbEntry('review');
+});
+document.getElementById('reviewMain').addEventListener('blur', e => {
+  if (document.getElementById('reviewMain').contains(e.relatedTarget)) return;
+  document.getElementById('reviewMain').classList.remove('kb-focused');
+  clearKbHighlight('review');
+});
+
+function getVisibleEntries(panel) {
+  if (panel === 'collect') {
+    return Array.from(document.querySelectorAll('#entriesList .entry'));
+  } else {
+    return Array.from(document.querySelectorAll('#reviewEntries .review-entry'));
+  }
+}
+
+function clearKbHighlight(panel) {
+  getVisibleEntries(panel).forEach(el => el.classList.remove('kb-active'));
+}
+
+function highlightKbEntry(panel) {
+  const entries = getVisibleEntries(panel);
+  entries.forEach(el => el.classList.remove('kb-active'));
+  const idx = panel === 'collect' ? kbCollectIdx : kbReviewIdx;
+  if (idx >= 0 && idx < entries.length) {
+    entries[idx].classList.add('kb-active');
+    entries[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+function kbApplySentiment(panel, sentiment) {
+  const entries = getVisibleEntries(panel);
+  const idx = panel === 'collect' ? kbCollectIdx : kbReviewIdx;
+  if (idx < 0 || idx >= entries.length) return;
+
+  const entry = entries[idx];
+  const id = parseInt(entry.dataset.id, 10);
+
+  if (panel === 'collect') {
+    const isPending = pendingBatch.some(e => e.id === id);
+    setSentiment(id, sentiment, isPending);
+  } else {
+    setReviewSentiment(id, sentiment);
+  }
+  // Advance to next entry after labeling
+  kbNavigate(panel, 1);
+}
+
+function kbNavigate(panel, dir) {
+  const entries = getVisibleEntries(panel);
+  if (!entries.length) return;
+
+  if (panel === 'collect') {
+    kbCollectIdx = Math.max(0, Math.min(entries.length - 1, kbCollectIdx + dir));
+    // Handle page boundary — go to next/prev page
+    if (dir > 0 && kbCollectIdx >= entries.length) {
+      const nextBtn = document.querySelector('#paginationBar .page-btn:last-child');
+      if (nextBtn && !nextBtn.disabled) { nextBtn.click(); kbCollectIdx = 0; return; }
+      kbCollectIdx = entries.length - 1;
+    } else if (dir < 0 && kbCollectIdx < 0) {
+      const prevBtn = document.querySelector('#paginationBar .page-btn:first-child');
+      if (prevBtn && !prevBtn.disabled) { prevBtn.click(); kbCollectIdx = 0; return; }
+      kbCollectIdx = 0;
+    }
+    highlightKbEntry('collect');
+  } else {
+    kbReviewIdx = Math.max(0, Math.min(entries.length - 1, kbReviewIdx + dir));
+    if (dir > 0 && kbReviewIdx >= entries.length) {
+      const nextBtn = document.querySelector('#reviewPagBar .page-btn:last-child');
+      if (nextBtn && !nextBtn.disabled) { nextBtn.click(); kbReviewIdx = 0; return; }
+      kbReviewIdx = entries.length - 1;
+    } else if (dir < 0 && kbReviewIdx < 0) {
+      const prevBtn = document.querySelector('#reviewPagBar .page-btn:first-child');
+      if (prevBtn && !prevBtn.disabled) { prevBtn.click(); kbReviewIdx = 0; return; }
+      kbReviewIdx = 0;
+    }
+    highlightKbEntry('review');
+  }
+}
+
+// Reset cursor when data changes so it doesn't go out of bounds
+function kbResetCursor(panel) {
+  if (panel === 'collect') kbCollectIdx = 0;
+  else kbReviewIdx = 0;
+}
+
+// Global keydown — only fires when one of our panels is focused
+document.addEventListener('keydown', e => {
+  // Don't fire if focus is in an input / textarea / select
+  const tag = document.activeElement?.tagName;
+  if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
+
+  const collectFocused = document.getElementById('collectMain').classList.contains('kb-focused');
+  const reviewFocused  = document.getElementById('reviewMain').classList.contains('kb-focused');
+  if (!collectFocused && !reviewFocused) return;
+
+  const panel = collectFocused ? 'collect' : 'review';
+
+  switch (e.key) {
+    case '1':
+      e.preventDefault();
+      kbApplySentiment(panel, 'positive');
+      break;
+    case '2':
+      e.preventDefault();
+      kbApplySentiment(panel, 'negative');
+      break;
+    case '3':
+      e.preventDefault();
+      kbApplySentiment(panel, 'neutral');
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      kbNavigate(panel, 1);
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      kbNavigate(panel, -1);
+      break;
+  }
+});
+
+// Reset cursor index when renders happen (so index stays valid)
+const _origRender = render;
+render = function(...args) {
+  _origRender(...args);
+  kbResetCursor('collect');
+  if (document.getElementById('collectMain').classList.contains('kb-focused')) {
+    highlightKbEntry('collect');
+  }
+};
+const _origRenderReview = renderReview;
+renderReview = function(...args) {
+  _origRenderReview(...args);
+  kbResetCursor('review');
+  if (document.getElementById('reviewMain').classList.contains('kb-focused')) {
+    highlightKbEntry('review');
+  }
+};
+
+// ── READER MODULE ────────────────────────────────────────────────────────────
+const RDR_PAGE_SIZE = 100;
+let rdrAllEntries    = [];
+let rdrFiltered      = [];
+let rdrCurrentFilter = 'all';
+let rdrSearchQuery   = '';
+let rdrCurrentPage   = 1;
+let rdrUndoStack     = null;
+let rdrUndoTimer     = null;
+let rdrEntrySeq      = 0;
+let rdrOriginalTotal = 0;
+
+// Tagalog particle set (same heuristic as reader)
+const RDR_TGL = new Set([
+  'ang','ng','sa','ay','mga','ko','mo','siya','kami','kayo','sila',
+  'namin','natin','nila','niya','niyo','ako','ikaw','ito','iyon',
+  'kaya','pero','para','kung','dahil','kapag','nang','naman','muna',
+  'ulit','pala','eh','kasi','daw','kahit','nga','po','opo','ho',
+  'hindi','wala','meron','ano','sino','saan','paano','bakit','tapos',
+  'yun','yung','nung','pang','diba','di','wag','huwag','sige','lang',
+  'din','rin','noh','raw','ba','grabe','sobra','talaga','siguro',
+  'syempre','siyempre','tol','beh','bes','kuya','ate','lodi','char',
+  'charot','gets','nako','naku','sus','uy','hoy','hay','baka','lagi',
+  'ngayon','kahapon','bukas','mamaya','kanina','dati','lahat','puro',
+  'sarili','parang','gusto','ayaw','kailangan','dapat','pwede','puwede',
+  'salamat','pasensya','ingat','nalang','medyo','konti','marami','super',
+  'ewan','hala','talaga','dito','doon','diyan','tayo','atin',
+  'ganon','ganito','ganyan','sana','luh','leh','weh','natin',
+  'pilipinas','pilipino','filipino','filipina','pinoy','pinay',
+]);
+
+function rdrDetectLang(text) {
+  const tokens = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
+  if (tokens.length < 2) return 'english';
+  const tgl = tokens.filter(t => RDR_TGL.has(t)).length;
+  const eng = tokens.filter(t => !RDR_TGL.has(t) && t.length > 2).length;
+  if (tgl === 0) return 'english';
+  if (tgl > 0 && eng > 0) return 'taglish';
+  return 'tagalog';
+}
+
+// File loading
+(function() {
+  const dz = document.getElementById('rdrDropZone');
+  const fi = document.getElementById('rdrFileInput');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) rdrProcessFile(e.dataTransfer.files[0]);
+  });
+  fi.addEventListener('change', e => {
+    if (e.target.files[0]) rdrProcessFile(e.target.files[0]);
+    e.target.value = '';
+  });
+})();
+
+function rdrProcessFile(file) {
+  if (!file.name.toLowerCase().endsWith('.txt')) { toast('Please load a .txt file', 'warn'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+    rdrAllEntries = lines.map(text => ({ id: rdrEntrySeq++, text, lang: rdrDetectLang(text) }));
+    rdrOriginalTotal = rdrAllEntries.length;
+
+    document.getElementById('rdrDropZone').style.display = 'none';
+    const fl = document.getElementById('rdrFileLoaded');
+    fl.classList.add('visible');
+    document.getElementById('rdrFileName').textContent  = file.name;
+    document.getElementById('rdrFileLines').textContent = rdrAllEntries.length + ' lines';
+    document.getElementById('rdrReloadWrap').style.display = '';
+
+    rdrCurrentFilter = 'all'; rdrSearchQuery = ''; rdrCurrentPage = 1;
+    document.getElementById('rdrSearchInput').value = '';
+    rdrResetChips();
+    rdrApplyFilters();
+    rdrShowUI();
+    toast('Loaded ' + rdrAllEntries.length + ' entries', 'ok');
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function rdrShowUI() {
+  ['rdrStatsPane','rdrFilterPane','rdrExportPane','rdrToolbar'].forEach(id => {
+    document.getElementById(id).style.display = '';
+  });
+  document.getElementById('rdrEmptyState').style.display = 'none';
+  rdrUpdateCounts();
+}
+
+function rdrClearAll() {
+  rdrAllEntries = []; rdrFiltered = []; rdrCurrentFilter = 'all';
+  rdrSearchQuery = ''; rdrCurrentPage = 1; rdrOriginalTotal = 0;
+  rdrUndoStack = null; rdrHideUndo();
+  document.getElementById('rdrDropZone').style.display = '';
+  document.getElementById('rdrFileLoaded').classList.remove('visible');
+  document.getElementById('rdrReloadWrap').style.display = 'none';
+  document.getElementById('rdrSearchInput').value = '';
+  rdrResetChips();
+  ['rdrStatsPane','rdrFilterPane','rdrExportPane','rdrToolbar','rdrPaginationBar'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('rdrEntriesList').innerHTML = '';
+  document.getElementById('rdrEmptyState').style.display = 'flex';
+  document.getElementById('rdrEmptyState').querySelector('p').textContent =
+    'Drop a .txt file into the sidebar\nto begin reading.';
+  rdrUpdateCounts();
+}
+
+// Filter
+function rdrSetFilter(lang) {
+  rdrCurrentFilter = lang; rdrCurrentPage = 1;
+  rdrResetChips();
+  document.querySelectorAll('.rdr-fchip').forEach(c => {
+    if (c.dataset.lang === lang) c.classList.add('active-' + lang);
+  });
+  rdrApplyFilters();
+}
+function rdrResetChips() {
+  document.querySelectorAll('.rdr-fchip').forEach(c => c.className = 'rdr-fchip');
+  document.querySelector('.rdr-fchip[data-lang="all"]').classList.add('active-all');
+}
+function rdrOnSearch() {
+  rdrSearchQuery = document.getElementById('rdrSearchInput').value.toLowerCase();
+  rdrCurrentPage = 1; rdrApplyFilters();
+}
+function rdrApplyFilters(silent) {
+  rdrFiltered = rdrAllEntries.filter(e => {
+    const lm = rdrCurrentFilter === 'all' || e.lang === rdrCurrentFilter;
+    const tm = !rdrSearchQuery || e.text.toLowerCase().includes(rdrSearchQuery);
+    return lm && tm;
+  });
+  if (!silent) { rdrRenderPage(); rdrRenderPagination(); }
+  rdrUpdateCounts();
+}
+
+// Render
+function rdrRenderPage() {
+  const list  = document.getElementById('rdrEntriesList');
+  const empty = document.getElementById('rdrEmptyState');
+  const start = (rdrCurrentPage - 1) * RDR_PAGE_SIZE;
+  const slice = rdrFiltered.slice(start, start + RDR_PAGE_SIZE);
+
+  document.getElementById('rdrShowingCount').textContent = rdrFiltered.length.toLocaleString();
+
+  if (!slice.length) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    empty.querySelector('p').textContent =
+      rdrAllEntries.length ? 'No entries match this filter.' : 'All entries were deleted.';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = slice.map(e => {
+    const idx = rdrAllEntries.findIndex(x => x.id === e.id) + 1;
+    return `<div class="rdr-entry lang-${e.lang}" data-rdr-id="${e.id}">
+      <div class="entry-text">${escHtml(e.text)}</div>
+      <div class="rdr-entry-right">
+        <div class="chip ${e.lang}">${e.lang}</div>
+        <div class="rdr-entry-num">#${idx}</div>
+        <button class="rdr-del-btn" onclick="rdrDeleteEntry(${e.id})">✕ del</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function rdrRenderPagination() {
+  const bar   = document.getElementById('rdrPaginationBar');
+  const total = rdrFiltered.length;
+  const maxP  = Math.ceil(total / RDR_PAGE_SIZE);
+  if (maxP <= 1) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+
+  const nums = document.getElementById('rdrPageNumbers');
+  nums.innerHTML = '';
+  const pages = rdrCurrentPage > 3 && maxP > 7
+    ? [1, '…', ...Array.from({length:3},(_,i)=>Math.max(2,rdrCurrentPage-1)+i).filter(p=>p>1&&p<maxP), '…', maxP]
+    : Array.from({length:maxP},(_,i)=>i+1);
+
+  // rebuild using buildPagination helper
+  bar.innerHTML = buildPagination(rdrCurrentPage, maxP, 'rdrGoToPage');
+  const infoSpan = document.createElement('span');
+  infoSpan.style.cssText = 'margin-left:auto;color:var(--dim);font-family:var(--mono);font-size:10px';
+  infoSpan.id = 'rdrPageInfo';
+  infoSpan.textContent = (((rdrCurrentPage-1)*RDR_PAGE_SIZE)+1) + '–' +
+    Math.min(rdrCurrentPage*RDR_PAGE_SIZE, total) + ' of ' + total;
+  bar.appendChild(infoSpan);
+  document.getElementById('rdrPrevBtn') && (document.getElementById('rdrPrevBtn').disabled = rdrCurrentPage <= 1);
+  document.getElementById('rdrNextBtn') && (document.getElementById('rdrNextBtn').disabled = rdrCurrentPage >= maxP);
+}
+
+function rdrGoToPage(p) { rdrCurrentPage = p; rdrRenderPage(); rdrRenderPagination(); document.getElementById('rdrEntriesList').scrollTop = 0; }
+function rdrChangePage(dir) {
+  const maxP = Math.ceil(rdrFiltered.length / RDR_PAGE_SIZE);
+  rdrCurrentPage = Math.max(1, Math.min(maxP, rdrCurrentPage + dir));
+  rdrRenderPage(); rdrRenderPagination(); document.getElementById('rdrEntriesList').scrollTop = 0;
+}
+
+// Stats
+function rdrLangCounts(arr) {
+  const c = { taglish: 0, tagalog: 0, english: 0 };
+  arr.forEach(e => { if (c[e.lang] !== undefined) c[e.lang]++; });
+  return c;
+}
+function rdrUpdateCounts() {
+  const c = rdrLangCounts(rdrAllEntries);
+  document.getElementById('rdrCAll').textContent     = rdrAllEntries.length.toLocaleString();
+  document.getElementById('rdrCTaglish').textContent = c.taglish.toLocaleString();
+  document.getElementById('rdrCTagalog').textContent = c.tagalog.toLocaleString();
+  document.getElementById('rdrCEnglish').textContent = c.english.toLocaleString();
+  rdrRenderBars(c);
+}
+function rdrRenderBars(c) {
+  const total = rdrAllEntries.length || 1;
+  document.getElementById('rdrLangBars').innerHTML =
+    ['taglish','tagalog','english'].map(lang => {
+      const n = c[lang]; const pct = Math.round(n / total * 100);
+      return `<div>
+        <div class="rdr-bar-meta"><span>${lang}</span><span class="rdr-bar-val">${n.toLocaleString()} · ${pct}%</span></div>
+        <div class="rdr-bar-track"><div class="rdr-bar-fill ${lang}" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+}
+
+// Delete
+function rdrDeleteEntry(id) {
+  const el = document.querySelector(`.rdr-entry[data-rdr-id="${id}"]`);
+  if (el) { el.classList.add('deleting'); setTimeout(() => el.remove(), 220); }
+  rdrUndoStack = { entries: [...rdrAllEntries], count: 1 };
+  rdrAllEntries = rdrAllEntries.filter(e => e.id !== id);
+  rdrShowUndo('1 entry deleted');
+  rdrApplyFilters(true);
+  setTimeout(() => { rdrApplyFilters(); }, 230);
+}
+function rdrDeleteFiltered() {
+  const ids = new Set(rdrFiltered.map(e => e.id));
+  const n   = ids.size;
+  if (!n) return;
+  rdrUndoStack  = { entries: [...rdrAllEntries], count: n };
+  rdrAllEntries = rdrAllEntries.filter(e => !ids.has(e.id));
+  rdrShowUndo(`${n} entr${n > 1 ? 'ies' : 'y'} deleted`);
+  rdrApplyFilters(); rdrUpdateCounts();
+}
+
+// Undo
+function rdrUndoDelete() {
+  if (!rdrUndoStack) return;
+  rdrAllEntries = rdrUndoStack.entries; rdrUndoStack = null;
+  rdrHideUndo(); rdrApplyFilters(); rdrUpdateCounts();
+}
+function rdrShowUndo(msg) {
+  clearTimeout(rdrUndoTimer);
+  document.getElementById('rdrUndoMsg').textContent = msg;
+  document.getElementById('rdrUndoToast').classList.add('visible');
+  rdrUndoTimer = setTimeout(() => { rdrHideUndo(); rdrUndoStack = null; }, 5000);
+}
+function rdrHideUndo() { document.getElementById('rdrUndoToast').classList.remove('visible'); }
+
+// Download
+function rdrDownloadAll() {
+  const data = rdrCurrentFilter === 'all' ? rdrAllEntries : rdrAllEntries.filter(e => e.lang === rdrCurrentFilter);
+  if (!data.length) return;
+  const suffix = rdrCurrentFilter === 'all' ? 'cleaned' : rdrCurrentFilter;
+  const blob = new Blob([data.map(e => e.text).join('\n')], { type: 'text/plain;charset=utf-8' });
+  dl(blob, `tagcol_${suffix}.txt`);
+}
+function rdrDownloadFiltered() {
+  if (!rdrFiltered.length) return;
+  const blob = new Blob([rdrFiltered.map(e => e.text).join('\n')], { type: 'text/plain;charset=utf-8' });
+  dl(blob, `tagcol_visible_${rdrCurrentFilter}.txt`);
+}
+
+// ── BOOT ──────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
